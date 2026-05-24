@@ -4,6 +4,7 @@ import '../styles/motifs.css';
 import '../styles/prose.css';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import MusicToggle from '../components/layout/MusicToggle.astro';
 import { getLangFromUrl, switchLocalePath } from '../i18n/utils';
 import { LOCALE_INFO, LOCALES } from '../i18n/locales';
 import { useTranslations } from '../i18n/utils';
@@ -81,6 +82,7 @@ const fontHref =
       <slot />
     </main>
     <Footer lang={lang} />
+    <MusicToggle />
 
     <!-- Shared lightbox (used by all Gallery instances) -->
     <dialog id="lightbox" class="lightbox" data-pagefind-ignore>

@@ -7,6 +7,7 @@ import {
   PANCHANG_YEAR, PANCHANG_PLACE, PANCHANG_DISCLAIMER, PANCHANG_SOURCES,
   WINDOWS, SANKRANTI, EKADASHI, FESTIVALS, MUHURAT,
 } from '../../../data/panchang';
+import { HISTORY_DATES } from '../../../data/history-dates';
 
 export function getStaticPaths() {
   return LOCALES.map((lang) => ({ params: { lang } }));
@@ -62,6 +63,7 @@ const eventsJson = JSON.stringify([
 ]);
 const muhuratJson = JSON.stringify(MUHURAT);
 const windowsJson = JSON.stringify(WINDOWS);
+const historyJson = JSON.stringify(HISTORY_DATES);
 const accent = '#b8860b';
 ---
 <BaseLayout
@@ -80,10 +82,11 @@ const accent = '#b8860b';
 
   <div class="container-wide panchang" data-pagefind-ignore style={`--pch:${accent}`}>
     <p class="pch-disclaimer">{PANCHANG_DISCLAIMER}</p>
+    <div class="divider-fish" aria-hidden="true" style="--accent: var(--pch)"></div>
 
     <!-- view switch -->
     <div class="pch-viewtabs" role="tablist">
-      <button type="button" data-view="day" class="active">📅 आजु / दिन · Today / Day</button>
+      <button type="button" data-view="day" class="active">📅 आजु · Today</button>
       <button type="button" data-view="month">🗓 मास · Month</button>
     </div>
 
@@ -117,12 +120,19 @@ const accent = '#b8860b';
           <button type="button" class:list={['pch-chip', { active: i === 0 }]} data-cat={c.cat}>{c.label}</button>
         ))}
       </div>
+      <label class="pch-monthsel">
+        <span>महिना · Month</span>
+        <select id="pch-monthfilter">
+          <option value="all">सब महिना · All months</option>
+          {MONTHS.map((m, i) => (<option value={i + 1}>{m}</option>))}
+        </select>
+      </label>
       <div class="pch-list" id="pch-list">
         {MONTHS.filter((m) => grouped[m]).map((m) => (
           <>
             <h3 class="pch-mhead">{m} {PANCHANG_YEAR}</h3>
             {grouped[m].map((r) => (
-              <div class="pch-row" data-cat={r.cat}>
+              <div class="pch-row" data-cat={r.cat} data-month={Number(r.date.slice(5, 7))}>
                 <span class="pch-rdate">{Number(r.date.slice(8, 10))}</span>
                 <span class="pch-rbody">
                   <span class="pch-rtitle">{r.dev ?? r.title}{r.dev && <span class="pch-rtitle-en"> · {r.title}</span>}</span>
@@ -152,6 +162,7 @@ const accent = '#b8860b';
   <script type="application/json" id="pch-events" set:html={eventsJson}></script>
   <script type="application/json" id="pch-muhurat" set:html={muhuratJson}></script>
   <script type="application/json" id="pch-windows" set:html={windowsJson}></script>
+  <script type="application/json" id="pch-history" set:html={historyJson}></script>
 </BaseLayout>
 
 <script>
@@ -159,7 +170,7 @@ const accent = '#b8860b';
   initPanchang();
 </script>
 
-<style>
+<style is:global>
   .panchang { padding-block: 1.5rem 3rem; --pch: #b8860b; }
   .pch-disclaimer {
     font-family: var(--font-ui);
@@ -173,11 +184,12 @@ const accent = '#b8860b';
     color: var(--fg);
   }
 
-  /* view tabs */
-  .pch-viewtabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  /* view tabs — always one row */
+  .pch-viewtabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: nowrap; }
   .pch-viewtabs button {
+    flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap;
     font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600;
-    padding: 0.6rem 1.1rem; border-radius: 999px;
+    padding: 0.7rem 0.9rem; border-radius: 999px;
     border: 1.5px solid color-mix(in srgb, var(--pch) 40%, var(--line));
     background: var(--surface); color: var(--fg); cursor: pointer;
   }
@@ -185,9 +197,11 @@ const accent = '#b8860b';
 
   /* TODAY card */
   .pch-today {
-    border: 1px solid color-mix(in srgb, var(--pch) 30%, var(--line));
+    border: 2.5px double color-mix(in srgb, var(--pch) 55%, var(--line));
     border-radius: 16px;
-    background: color-mix(in srgb, var(--pch) 6%, var(--surface));
+    background:
+      radial-gradient(circle at 100% -10%, color-mix(in srgb, var(--pch) 12%, transparent), transparent 45%),
+      color-mix(in srgb, var(--pch) 6%, var(--surface));
     padding: 1.4rem clamp(1rem, 3vw, 1.8rem);
     margin-bottom: 1.2rem;
   }
@@ -226,12 +240,27 @@ const accent = '#b8860b';
     border: 1px solid color-mix(in srgb, #3e7c4f 35%, transparent); color: var(--fg);
   }
 
-  .pch-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; margin-top: 1rem; }
-  .pch-cell { display: flex; flex-direction: column; padding: 0.55rem 0; border-bottom: 1px dashed var(--line); }
-  .pch-k { font-family: var(--font-ui); font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-  .pch-v { font-size: 1.05rem; color: var(--fg); }
-  .pch-v small { color: var(--muted); font-size: 0.82rem; }
+  /* clean label-left / value-right panchang table */
+  .pch-dl { margin: 1.1rem 0 0; display: grid; gap: 0; }
+  .pch-dr { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.6rem 0.15rem; border-bottom: 1px solid color-mix(in srgb, var(--pch) 18%, var(--line)); }
+  .pch-dr:last-child { border-bottom: none; }
+  .pch-dr dt { display: flex; flex-direction: column; line-height: 1.2; flex-shrink: 0; font-family: var(--font-display); font-size: 1.05rem; color: var(--fg); }
+  .pch-dr dt i { font-family: var(--font-ui); font-style: normal; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 1px; }
+  .pch-dr dd { margin: 0; text-align: right; font-size: 1.14rem; color: var(--fg); font-weight: 500; }
+  .pch-dr dd small { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+  .pch-upto { display: inline-block; font-size: 0.8rem; color: var(--muted); font-weight: 400; }
   .pch-nodata { color: var(--muted); font-family: var(--font-ui); margin: 0; }
+
+  /* on this day in history */
+  .pch-hist { border-top: 1px dashed color-mix(in srgb, var(--pch) 32%, var(--line)); padding-top: 0.85rem; }
+  .pch-hist-h { color: #a06a2c; }
+  .pch-histlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .pch-histlist li { display: flex; gap: 0.65rem; align-items: baseline; font-family: var(--font-ui); font-size: 0.92rem; line-height: 1.5; color: var(--fg); }
+  .pch-histyr { font-family: var(--font-display); font-weight: 700; color: var(--pch); flex-shrink: 0; min-width: 2.7rem; }
+
+  /* month filter */
+  .pch-monthsel { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 1.3rem; }
+  .pch-monthsel select { font-family: var(--font-ui); font-size: 0.92rem; text-transform: none; letter-spacing: 0; padding: 0.45rem 0.7rem; border-radius: 8px; border: 1.5px solid color-mix(in srgb, var(--pch) 40%, var(--line)); background: var(--surface); color: var(--fg); cursor: pointer; }
 
   /* stepper */
   .pch-dayview { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1.5rem; }
@@ -245,6 +274,15 @@ const accent = '#b8860b';
   #pch-date { font-family: var(--font-ui); font-size: 0.95rem; padding: 0.55rem 0.7rem; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); }
 
   /* month calendar */
+  .pch-monthview {
+    border: 2.5px double color-mix(in srgb, var(--pch) 50%, var(--line));
+    border-radius: 16px;
+    padding: 1.2rem clamp(0.55rem, 2vw, 1.3rem) 1.4rem;
+    background:
+      radial-gradient(circle at 0 0, color-mix(in srgb, var(--pch) 9%, transparent), transparent 38%),
+      color-mix(in srgb, var(--pch) 4%, var(--surface));
+    margin-bottom: 1.6rem;
+  }
   .pch-monthnav { display: flex; align-items: center; justify-content: center; gap: 1.2rem; margin-bottom: 0.9rem; }
   .pch-monthnav button { width: 42px; height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); font-size: 1.4rem; cursor: pointer; }
   .pch-monthnav span { font-family: var(--font-display); font-size: 1.3rem; min-width: 9rem; text-align: center; }
@@ -258,6 +296,7 @@ const accent = '#b8860b';
   .pch-gd.pch-empty { border: none; background: none; cursor: default; }
   .pch-gd.is-today { border-color: var(--pch); box-shadow: 0 0 0 1.5px var(--pch) inset; }
   .pch-gd.is-win { background: color-mix(in srgb, #c8341e 8%, var(--surface)); }
+  .pch-gd.has-fest { background: color-mix(in srgb, var(--pch) 11%, var(--surface)); border-color: color-mix(in srgb, var(--pch) 32%, var(--line)); }
   .pch-gnum { font-size: 1rem; font-weight: 700; color: var(--fg); }
   .pch-gtithi { font-size: 0.66rem; color: var(--muted); line-height: 1.1; }
   .pch-gdots { display: flex; gap: 2px; margin-top: auto; }
@@ -299,9 +338,12 @@ const accent = '#b8860b';
   .pch-place { color: var(--muted); font-size: 0.85rem; margin: 0; }
 
   @media (max-width: 560px) {
-    .pch-grid2 { grid-template-columns: 1fr; }
     .pch-gd { min-height: 58px; padding: 0.3rem 0.25rem; }
     .pch-gnum { font-size: 0.92rem; }
     .pch-gtithi { font-size: 0.6rem; }
+    .pch-dr dd { font-size: 1.05rem; }
   }
 </style>
+<!-- styles are global because the Today card & calendar are injected by client JS
+     (Astro's scoped element selectors like dt/dd don't reach runtime-injected nodes).
+     All selectors are .pch-* unique and this CSS only loads on /panchang/. -->

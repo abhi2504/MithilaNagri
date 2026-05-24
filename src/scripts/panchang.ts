@@ -28,6 +28,7 @@ export async function initPanchang() {
   const events: Ev[] = jget('pch-events');
   const muhurat: Muh[] = jget('pch-muhurat');
   const windows: Win[] = jget('pch-windows');
+  const history: { md: string; y?: number; en: string; dev?: string }[] = jget('pch-history');
   const YEAR = 2026;
 
   let days: Record<string, Day> = {};
@@ -43,6 +44,8 @@ export async function initPanchang() {
   const muhByDate: Record<string, Muh[]> = {};
   for (const m of muhurat) for (const dt of m.dates) (muhByDate[dt] = muhByDate[dt] || []).push(m);
   const windowOn = (d: string) => windows.find((w) => d >= w.start && d <= w.end);
+  const histByMd: Record<string, typeof history> = {};
+  for (const h of history) (histByMd[h.md] = histByMd[h.md] || []).push(h);
 
   const todayISO = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`; };
   const clamp = (iso: string) => (iso < `${YEAR}-01-01` ? `${YEAR}-01-01` : iso > `${YEAR}-12-31` ? `${YEAR}-12-31` : iso);
@@ -75,19 +78,27 @@ export async function initPanchang() {
       special += '<div class="pch-special"><p class="pch-special-h pch-muh-h">शुभ मुहूर्त · Auspicious for</p><p class="pch-muhrow">' +
         muhs.map((m) => `<span class="pch-muhtag">${m.emoji} ${esc(m.dev)}</span>`).join('') + '</p></div>';
     }
-    if (!w && !evs.length && !muhs.length) special = '<div class="pch-banner">आइ कोनो विशेष पाबनि वा मुहूर्त नहि। · No special festival or muhurat today.</div>';
+    const md = iso.slice(5);
+    const hist = histByMd[md] || [];
+    if (hist.length) {
+      special += '<div class="pch-special pch-hist"><p class="pch-special-h pch-hist-h">📜 इतिहासमे आजु · On this day</p><ul class="pch-histlist">' +
+        hist.slice().sort((a, b) => (a.y || 0) - (b.y || 0)).map((h) => `<li><span class="pch-histyr">${h.y || '—'}</span> <span>${esc(h.dev || h.en)}</span></li>`).join('') +
+        '</ul></div>';
+    }
+    if (!w && !evs.length && !muhs.length && !hist.length) special = '<div class="pch-banner">आइ कोनो विशेष पाबनि वा मुहूर्त नहि। · No special festival or muhurat today.</div>';
 
-    const grid = dd ? `
-      <div class="pch-grid2">
-        <div class="pch-cell"><span class="pch-k">मास · Maas</span><span class="pch-v">${dd.sm} <small>(${dd.smEn})</small></span></div>
-        <div class="pch-cell"><span class="pch-k">पक्ष-तिथि · Tithi</span><span class="pch-v">${dd.pak} ${dd.tithi}${dd.tEnd ? ` <small>${dd.tNext ? 'भोर तक' : 'तक'} ${dd.tEnd}</small>` : ''}</span></div>
-        <div class="pch-cell"><span class="pch-k">नक्षत्र · Nakshatra</span><span class="pch-v">${dd.nak}${dd.nEnd ? ` <small>${dd.nNext ? 'भोर तक' : 'तक'} ${dd.nEnd}</small>` : ''}</span></div>
-        <div class="pch-cell"><span class="pch-k">वार · Day</span><span class="pch-v">${dd.wdDev} <small>(${dd.wd})</small></span></div>
-        <div class="pch-cell"><span class="pch-k">सूर्योदय · Sunrise</span><span class="pch-v">${dd.sr || '—'}</span></div>
-        <div class="pch-cell"><span class="pch-k">सूर्यास्त · Sunset</span><span class="pch-v">${dd.ss || '—'}</span></div>
-        <div class="pch-cell"><span class="pch-k">योग · Yoga</span><span class="pch-v">${esc(dd.yoga) || '—'}</span></div>
-        <div class="pch-cell"><span class="pch-k">करण · Karana</span><span class="pch-v">${esc(dd.karana) || '—'}</span></div>
-      </div>` : '<p class="pch-nodata">Daily detail is loading…</p>';
+    const upto = (hhmm: string, next: boolean) => (hhmm ? ` <span class="pch-upto">${hhmm}${next ? ' भोर' : ''} तक</span>` : '');
+    const dr = (dev: string, en: string, val: string) => `<div class="pch-dr"><dt>${dev}<i>${en}</i></dt><dd>${val}</dd></div>`;
+    const grid = dd ? `<dl class="pch-dl">
+      ${dr('तिथि', 'Tithi', `${dd.pak} ${dd.tithi}${upto(dd.tEnd, dd.tNext)}`)}
+      ${dr('नक्षत्र', 'Nakshatra', `${dd.nak}${upto(dd.nEnd, dd.nNext)}`)}
+      ${dr('मास', 'Month', `${dd.sm} <small>· ${esc(dd.masaEn)}</small>`)}
+      ${dr('वार', 'Day', dd.wdDev)}
+      ${dr('सूर्योदय', 'Sunrise', dd.sr || '—')}
+      ${dr('सूर्यास्त', 'Sunset', dd.ss || '—')}
+      ${dr('योग', 'Yoga', esc(dd.yoga) || '—')}
+      ${dr('करण', 'Karana', esc(dd.karana) || '—')}
+    </dl>` : '<p class="pch-nodata">पंचांग लोड भ’ रहल अछि…</p>';
 
     todayCard.innerHTML = `
       <div class="pch-today-head">
@@ -140,7 +151,7 @@ export async function initPanchang() {
       const hasEka = (evByDate[iso] || []).some((e) => e.cat === 'ekadashi');
       const hasMuh = !!muhByDate[iso];
       const dots = `${hasFest ? '<i class="dot dot-f"></i>' : ''}${hasMuh ? '<i class="dot dot-m"></i>' : ''}${hasEka ? '<i class="dot dot-e"></i>' : ''}`;
-      html += `<button class="pch-gd${iso === realToday ? ' is-today' : ''}${w ? ' is-win' : ''}" data-iso="${iso}">
+      html += `<button class="pch-gd${iso === realToday ? ' is-today' : ''}${w ? ' is-win' : ''}${hasFest ? ' has-fest' : ''}" data-iso="${iso}">
         <span class="pch-gnum">${day}</span>
         <span class="pch-gtithi">${dd ? dd.tithi : ''}</span>
         <span class="pch-gdots">${dots}</span></button>`;
@@ -151,22 +162,32 @@ export async function initPanchang() {
   root.querySelector('#pch-mprev')?.addEventListener('click', () => renderMonth(mCur - 1));
   root.querySelector('#pch-mnext')?.addEventListener('click', () => renderMonth(mCur + 1));
 
-  // ── event-list category filter ──
+  // ── event-list filter: category (chips) AND month (dropdown) ──
   const list = root.querySelector<HTMLElement>('#pch-list');
+  let curCat = 'all', curMonth = 'all';
+  function applyFilter() {
+    list?.querySelectorAll<HTMLElement>('.pch-row').forEach((row) => {
+      const catOk = curCat === 'all' || row.dataset.cat === curCat;
+      const monOk = curMonth === 'all' || row.dataset.month === curMonth;
+      row.hidden = !(catOk && monOk);
+    });
+    // hide month headers that now have no visible rows
+    list?.querySelectorAll<HTMLElement>('.pch-mhead').forEach((h) => {
+      let n = h.nextElementSibling as HTMLElement | null, any = false;
+      while (n && !n.classList.contains('pch-mhead')) { if (!n.hidden) any = true; n = n.nextElementSibling as HTMLElement | null; }
+      h.hidden = !any;
+    });
+  }
   root.querySelectorAll<HTMLButtonElement>('.pch-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
-      const cat = chip.dataset.cat!;
+      curCat = chip.dataset.cat!;
       root.querySelectorAll('.pch-chip').forEach((c) => c.classList.toggle('active', c === chip));
-      list?.querySelectorAll<HTMLElement>('[data-cat]').forEach((row) => {
-        row.hidden = cat !== 'all' && row.dataset.cat !== cat;
-      });
-      // hide month headers that have no visible rows
-      list?.querySelectorAll<HTMLElement>('.pch-mhead').forEach((h) => {
-        let n = h.nextElementSibling as HTMLElement | null, any = false;
-        while (n && !n.classList.contains('pch-mhead')) { if (!n.hidden) any = true; n = n.nextElementSibling as HTMLElement | null; }
-        h.hidden = !any;
-      });
+      applyFilter();
     });
+  });
+  root.querySelector<HTMLSelectElement>('#pch-monthfilter')?.addEventListener('change', (e) => {
+    curMonth = (e.target as HTMLSelectElement).value;
+    applyFilter();
   });
 
   renderDay(cur);

@@ -1,0 +1,103 @@
+---
+// Opt-in ambient-music toggle (OFF by default). On a multi-page static site a
+// score cannot truly play *across* navigations and browsers block autoplay with
+// sound, so this is a user-controlled button that remembers the choice and
+// resumes on the first tap of each page. It stays hidden unless a licensed audio
+// file exists at /audio/mithila.mp3 (drop one in to enable it).
+const SRC = '/audio/mithila.mp3';
+---
+<div class="music-toggle" id="music-toggle" hidden data-pagefind-ignore>
+  <button type="button" id="music-btn" aria-pressed="false" aria-label="मिथिला संगीत · Play Mithila music">
+    <span class="music-ic" aria-hidden="true"></span>
+    <span class="music-lbl">संगीत</span>
+  </button>
+  <audio id="music-audio" loop preload="none" src={SRC}></audio>
+</div>
+
+<script>
+  (() => {
+    const wrap = document.getElementById('music-toggle');
+    const btn = document.getElementById('music-btn');
+    const audio = document.getElementById('music-audio') as HTMLAudioElement | null;
+    if (!wrap || !btn || !audio) return;
+    let playing = false;
+    const KEY = 'mithila-music';
+
+    const reflect = () => {
+      btn.setAttribute('aria-pressed', String(playing));
+      wrap.classList.toggle('is-playing', playing);
+    };
+    const start = () => audio.play().then(() => { playing = true; reflect(); }).catch(() => {});
+
+    // Only reveal the control if the audio file actually exists.
+    fetch(audio.src, { method: 'HEAD' })
+      .then((r) => {
+        if (!r.ok) return;
+        wrap.hidden = false;
+        // Resume if the visitor had it on — on load, then on first tap (autoplay policy).
+        let pref = false;
+        try { pref = localStorage.getItem(KEY) === '1'; } catch {}
+        if (pref) {
+          start();
+          const once = () => { if (!playing) start(); document.removeEventListener('pointerdown', once); };
+          document.addEventListener('pointerdown', once, { once: true });
+        }
+      })
+      .catch(() => {});
+
+    btn.addEventListener('click', () => {
+      if (playing) {
+        audio.pause();
+        playing = false;
+        reflect();
+        try { localStorage.setItem(KEY, '0'); } catch {}
+      } else {
+        start();
+        try { localStorage.setItem(KEY, '1'); } catch {}
+      }
+    });
+  })();
+</script>
+
+<style>
+  .music-toggle {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 40;
+  }
+  .music-toggle button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem 0.5rem 0.7rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--color-vermilion, #c8341e) 45%, var(--line));
+    background: var(--surface);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+  .music-toggle button:hover { border-color: var(--color-vermilion, #c8341e); }
+  .music-ic {
+    width: 16px; height: 16px; flex-shrink: 0;
+    background: var(--muted);
+    -webkit-mask: no-repeat center / contain;
+    mask: no-repeat center / contain;
+    /* speaker-muted glyph */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z'/%3E%3C/svg%3E");
+  }
+  .music-toggle.is-playing button {
+    border-color: var(--color-vermilion, #c8341e);
+    background: color-mix(in srgb, var(--color-vermilion, #c8341e) 12%, var(--surface));
+  }
+  .music-toggle.is-playing .music-ic { background: var(--color-vermilion, #c8341e); }
+  @media (max-width: 560px) {
+    .music-toggle .music-lbl { display: none; }
+    .music-toggle button { padding: 0.6rem; }
+  }
+</style>
