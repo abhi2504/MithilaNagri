@@ -142,6 +142,18 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
+    id: 'panchang',
+    icon: 'sun',
+    accent: '#b8860b',
+    flagship: true,
+    labels: { en: 'Panchang', hi: 'पंचांग', mai: 'पंचांग' },
+    blurbs: {
+      en: 'The living Maithili almanac — today’s tithi and nakshatra, the year’s festivals and Ekadashi, and the auspicious muhurat for marriage, upanayan, mundan and house-warming.',
+      hi: 'जीवंत मैथिली पंचांग — आज की तिथि-नक्षत्र, वर्ष भर के पर्व-एकादशी, और विवाह, उपनयन, मुंडन व गृह-प्रवेश के शुभ मुहूर्त।',
+      mai: 'जीवन्त मैथिली पंचांग — आजुक तिथि-नक्षत्र, वर्ष भरिक पाबनि-एकादशी, आ विवाह, उपनयन, मुंडन ओ घरबासक शुभ मुहूर्त।',
+    },
+  },
+  {
     id: 'discover',
     icon: 'fish',
     accent: '#c8341e',
@@ -161,6 +173,7 @@ export function getSection(id: string): SectionDef | undefined {
 
 /** Nav order for the header (Discover first). */
 export const NAV_ORDER = [
+  'panchang',
   'discover',
   'history',
   'art',

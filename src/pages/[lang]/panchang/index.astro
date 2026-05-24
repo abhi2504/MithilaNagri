@@ -1,0 +1,307 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { readFileSync } from 'node:fs';
+import {
+  PANCHANG_YEAR, PANCHANG_PLACE, PANCHANG_DISCLAIMER, PANCHANG_SOURCES,
+  WINDOWS, SANKRANTI, EKADASHI, FESTIVALS, MUHURAT,
+} from '../../../data/panchang';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+
+// Read the computed daily grid (built by scripts/gen-panchang.mjs) to enrich the
+// server-rendered event list with weekday + tithi + nakshatra.
+let dayMap: Record<string, any> = {};
+try {
+  const raw = JSON.parse(readFileSync(new URL('../../../../public/data/panchang-2026.json', import.meta.url), 'utf8'));
+  for (const d of raw.days) dayMap[d.d] = d;
+} catch {}
+
+// Merge every dated event into one list with a category, then group by month.
+type Row = { date: string; cat: string; title: string; dev?: string; note?: string; link?: string; badge: string };
+const rows: Row[] = [];
+for (const f of FESTIVALS) rows.push({ date: f.date, cat: 'festival', title: f.en, dev: f.dev, note: f.note, link: f.link, badge: 'Festival' });
+for (const s of SANKRANTI) rows.push({ date: s.date, cat: 'sankranti', title: s.en, dev: s.dev, note: s.note, link: s.link, badge: 'Sankranti' });
+for (const e of EKADASHI) rows.push({ date: e.date, cat: 'ekadashi', title: e.en, dev: e.dev, note: e.note, badge: 'Ekadashi' });
+for (const m of MUHURAT) for (const dt of m.dates) rows.push({ date: dt, cat: m.key, title: m.en, dev: m.dev, link: m.link, badge: m.en });
+for (const w of WINDOWS) rows.push({ date: w.start, cat: 'window', title: `${w.en} (until ${w.end})`, dev: w.dev, note: w.note, badge: 'Period' });
+rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const grouped: Record<string, Row[]> = {};
+for (const r of rows) { const m = MONTHS[Number(r.date.slice(5, 7)) - 1]; (grouped[m] = grouped[m] || []).push(r); }
+
+const sub = (date: string, withNak = false) => {
+  const dd = dayMap[date];
+  if (!dd) return '';
+  let s = `${dd.wdDev} · ${dd.pak} ${dd.tithi}`;
+  if (withNak && dd.nak) s += ` · ${dd.nak}`;
+  return s;
+};
+
+const CHIPS = [
+  { cat: 'all', label: 'सब · All' },
+  { cat: 'festival', label: '🪔 पाबनि · Festivals' },
+  { cat: 'vivah', label: '💍 विवाह · Vivah' },
+  { cat: 'upanayan', label: '🧵 उपनयन' },
+  { cat: 'mundan', label: '✂️ मुंडन' },
+  { cat: 'gharbas', label: '🏠 घरबास' },
+  { cat: 'ekadashi', label: '☽ एकादशी' },
+  { cat: 'sankranti', label: '☀ संक्रांति' },
+  { cat: 'window', label: '⛔ मलमास/खरमास' },
+];
+
+const eventsJson = JSON.stringify([
+  ...FESTIVALS.map((f) => ({ ...f, cat: 'festival' })),
+  ...SANKRANTI.map((s) => ({ ...s, cat: 'sankranti' })),
+  ...EKADASHI.map((e) => ({ ...e, cat: 'ekadashi' })),
+]);
+const muhuratJson = JSON.stringify(MUHURAT);
+const windowsJson = JSON.stringify(WINDOWS);
+const accent = '#b8860b';
+---
+<BaseLayout
+  title={`Maithili Panchang ${PANCHANG_YEAR} · मैथिली पंचांग`}
+  description={`The Maithili / Mithila Panchang for ${PANCHANG_YEAR} — today's tithi, nakshatra and muhurat, with the year's festivals, Ekadashi, Sankranti and the Vivah, Upanayan, Mundan & Gharbas dates, for Darbhanga.`}
+  accent={accent}
+  section="panchang"
+>
+  <SectionHero
+    lang={lang}
+    title="मैथिली पंचांग"
+    blurb={`The living almanac of Mithila for ${PANCHANG_YEAR} — today's panchang, every festival and the auspicious dates for marriage, upanayan, mundan and house-warming. Computed for Darbhanga; browse day by day or month by month.`}
+    icon="sun"
+    crumbs={[{ label: 'Panchang' }]}
+  />
+
+  <div class="container-wide panchang" data-pagefind-ignore style={`--pch:${accent}`}>
+    <p class="pch-disclaimer">{PANCHANG_DISCLAIMER}</p>
+
+    <!-- view switch -->
+    <div class="pch-viewtabs" role="tablist">
+      <button type="button" data-view="day" class="active">📅 आजु / दिन · Today / Day</button>
+      <button type="button" data-view="month">🗓 मास · Month</button>
+    </div>
+
+    <!-- TODAY / DAY detail (client-rendered) -->
+    <section class="pch-today" id="pch-today"><p class="pch-nodata">पंचांग लोड भ' रहल अछि… · Loading…</p></section>
+
+    <!-- DAY stepper -->
+    <div class="pch-dayview" id="pch-dayview">
+      <button type="button" id="pch-prev" class="pch-step">‹ पिछला</button>
+      <button type="button" id="pch-today-btn" class="pch-step pch-step-today">आजु · Today</button>
+      <input type="date" id="pch-date" min={`${PANCHANG_YEAR}-01-01`} max={`${PANCHANG_YEAR}-12-31`} aria-label="Pick a date" />
+      <button type="button" id="pch-next" class="pch-step">अगिला ›</button>
+    </div>
+
+    <!-- MONTH calendar -->
+    <div class="pch-monthview" id="pch-monthview" hidden>
+      <div class="pch-monthnav">
+        <button type="button" id="pch-mprev" aria-label="Previous month">‹</button>
+        <span id="pch-mlabel"></span>
+        <button type="button" id="pch-mnext" aria-label="Next month">›</button>
+      </div>
+      <div class="pch-cal" id="pch-grid"></div>
+      <p class="pch-legend"><i class="dot dot-f"></i> पाबनि/संक्रांति <i class="dot dot-m"></i> मुहूर्त <i class="dot dot-e"></i> एकादशी</p>
+    </div>
+
+    <!-- EVENT chips + full-year list -->
+    <section class="pch-events">
+      <h2 class="pch-events-h">{PANCHANG_YEAR} — महत्वपूर्ण तिथि · Important dates</h2>
+      <div class="pch-chips" role="tablist">
+        {CHIPS.map((c, i) => (
+          <button type="button" class:list={['pch-chip', { active: i === 0 }]} data-cat={c.cat}>{c.label}</button>
+        ))}
+      </div>
+      <div class="pch-list" id="pch-list">
+        {MONTHS.filter((m) => grouped[m]).map((m) => (
+          <>
+            <h3 class="pch-mhead">{m} {PANCHANG_YEAR}</h3>
+            {grouped[m].map((r) => (
+              <div class="pch-row" data-cat={r.cat}>
+                <span class="pch-rdate">{Number(r.date.slice(8, 10))}</span>
+                <span class="pch-rbody">
+                  <span class="pch-rtitle">{r.dev ?? r.title}{r.dev && <span class="pch-rtitle-en"> · {r.title}</span>}</span>
+                  {sub(r.date, ['vivah', 'upanayan', 'mundan', 'gharbas'].includes(r.cat)) && (
+                    <span class="pch-rsub">{sub(r.date, ['vivah', 'upanayan', 'mundan', 'gharbas'].includes(r.cat))}</span>
+                  )}
+                  {r.note && <span class="pch-rnote">{r.note}</span>}
+                </span>
+                <span class:list={['pch-rbadge', `cat-${r.cat}`]}>{r.badge}</span>
+                {r.link && <a class="pch-rlink" href={r.link} aria-label={`Read about ${r.title}`}>→</a>}
+              </div>
+            ))}
+          </>
+        ))}
+      </div>
+    </section>
+
+    <section class="pch-sources">
+      <h2>स्रोत · Sources</h2>
+      <ul>
+        {PANCHANG_SOURCES.map((s) => (<li><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>))}
+      </ul>
+      <p class="pch-place">गणना · Computed for {PANCHANG_PLACE} (IST). तिथि-समय ±कछु मिनट भ' सकैत अछि।</p>
+    </section>
+  </div>
+
+  <script type="application/json" id="pch-events" set:html={eventsJson}></script>
+  <script type="application/json" id="pch-muhurat" set:html={muhuratJson}></script>
+  <script type="application/json" id="pch-windows" set:html={windowsJson}></script>
+</BaseLayout>
+
+<script>
+  import { initPanchang } from '../../../scripts/panchang.ts';
+  initPanchang();
+</script>
+
+<style>
+  .panchang { padding-block: 1.5rem 3rem; --pch: #b8860b; }
+  .pch-disclaimer {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    background: color-mix(in srgb, var(--pch) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--pch) 35%, var(--line));
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    margin: 0 0 1.4rem;
+    color: var(--fg);
+  }
+
+  /* view tabs */
+  .pch-viewtabs { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .pch-viewtabs button {
+    font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600;
+    padding: 0.6rem 1.1rem; border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--pch) 40%, var(--line));
+    background: var(--surface); color: var(--fg); cursor: pointer;
+  }
+  .pch-viewtabs button.active { background: var(--pch); border-color: var(--pch); color: #fff; }
+
+  /* TODAY card */
+  .pch-today {
+    border: 1px solid color-mix(in srgb, var(--pch) 30%, var(--line));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--pch) 6%, var(--surface));
+    padding: 1.4rem clamp(1rem, 3vw, 1.8rem);
+    margin-bottom: 1.2rem;
+  }
+  .pch-today-head { margin-bottom: 0.6rem; }
+  .pch-todaybadge {
+    display: inline-block; font-family: var(--font-ui); font-weight: 700; font-size: 0.72rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: var(--pch);
+    padding: 0.2rem 0.7rem; border-radius: 999px; margin-bottom: 0.4rem;
+  }
+  .pch-bigdate { font-size: clamp(1.4rem, 4vw, 2rem); margin: 0; color: var(--fg); }
+  .pch-samvat { font-family: var(--font-ui); color: var(--muted); margin: 0.25rem 0 0; font-size: 0.92rem; }
+
+  .pch-banner {
+    font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.55;
+    padding: 0.7rem 1rem; border-radius: 10px; margin: 0.9rem 0;
+    background: var(--alt); color: var(--fg);
+  }
+  .pch-banner-warn {
+    background: color-mix(in srgb, #c8341e 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, #c8341e 40%, transparent);
+  }
+  .pch-special { margin: 0.9rem 0; }
+  .pch-special-h { font-family: var(--font-ui); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--pch); margin: 0 0 0.4rem; }
+  .pch-muh-h { color: #3e7c4f; }
+  .pch-evlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .pch-evlist li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.6rem; }
+  .pch-evname { font-family: var(--font-display); font-size: 1.15rem; color: var(--fg); }
+  .pch-evname-en { font-family: var(--font-ui); font-size: 0.82rem; color: var(--muted); }
+  .pch-evlink { font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600; color: var(--link); text-decoration: underline; }
+  .pch-evnote { flex-basis: 100%; font-family: var(--font-ui); font-size: 0.84rem; color: var(--muted); }
+  .pch-muhrow { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .pch-muhtag {
+    font-family: var(--font-ui); font-size: 0.86rem; font-weight: 600;
+    padding: 0.3rem 0.7rem; border-radius: 999px;
+    background: color-mix(in srgb, #3e7c4f 16%, var(--surface));
+    border: 1px solid color-mix(in srgb, #3e7c4f 35%, transparent); color: var(--fg);
+  }
+
+  .pch-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; margin-top: 1rem; }
+  .pch-cell { display: flex; flex-direction: column; padding: 0.55rem 0; border-bottom: 1px dashed var(--line); }
+  .pch-k { font-family: var(--font-ui); font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .pch-v { font-size: 1.05rem; color: var(--fg); }
+  .pch-v small { color: var(--muted); font-size: 0.82rem; }
+  .pch-nodata { color: var(--muted); font-family: var(--font-ui); margin: 0; }
+
+  /* stepper */
+  .pch-dayview { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1.5rem; }
+  .pch-step {
+    font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600;
+    padding: 0.6rem 1rem; border-radius: 10px; border: 1.5px solid var(--line);
+    background: var(--surface); color: var(--fg); cursor: pointer;
+  }
+  .pch-step:hover { border-color: var(--pch); }
+  .pch-step-today { background: var(--pch); color: #fff; border-color: var(--pch); }
+  #pch-date { font-family: var(--font-ui); font-size: 0.95rem; padding: 0.55rem 0.7rem; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); }
+
+  /* month calendar */
+  .pch-monthnav { display: flex; align-items: center; justify-content: center; gap: 1.2rem; margin-bottom: 0.9rem; }
+  .pch-monthnav button { width: 42px; height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); font-size: 1.4rem; cursor: pointer; }
+  .pch-monthnav span { font-family: var(--font-display); font-size: 1.3rem; min-width: 9rem; text-align: center; }
+  .pch-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .pch-gh { font-family: var(--font-ui); font-size: 0.78rem; text-align: center; color: var(--muted); padding: 0.3rem 0; }
+  .pch-gd {
+    min-height: 64px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0.35rem 0.4rem;
+    cursor: pointer; text-align: left; font-family: var(--font-ui);
+  }
+  .pch-gd.pch-empty { border: none; background: none; cursor: default; }
+  .pch-gd.is-today { border-color: var(--pch); box-shadow: 0 0 0 1.5px var(--pch) inset; }
+  .pch-gd.is-win { background: color-mix(in srgb, #c8341e 8%, var(--surface)); }
+  .pch-gnum { font-size: 1rem; font-weight: 700; color: var(--fg); }
+  .pch-gtithi { font-size: 0.66rem; color: var(--muted); line-height: 1.1; }
+  .pch-gdots { display: flex; gap: 2px; margin-top: auto; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot-f { background: var(--pch); }
+  .dot-m { background: #3e7c4f; }
+  .dot-e { background: #2e4374; }
+  .pch-legend { font-family: var(--font-ui); font-size: 0.8rem; color: var(--muted); margin-top: 0.8rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .pch-legend .dot { margin-left: 0.6rem; }
+
+  /* events list */
+  .pch-events { margin-top: 2.4rem; }
+  .pch-events-h { font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 0 0 1rem; }
+  .pch-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.2rem; }
+  .pch-chip {
+    font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+    padding: 0.4rem 0.85rem; border-radius: 999px;
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer;
+  }
+  .pch-chip.active { background: var(--pch); border-color: var(--pch); color: #fff; }
+  .pch-mhead { font-family: var(--font-ui); font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--pch); margin: 1.5rem 0 0.5rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  .pch-row { display: grid; grid-template-columns: 2.4rem 1fr auto auto; gap: 0.7rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
+  .pch-rdate { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--pch); text-align: center; }
+  .pch-rbody { display: flex; flex-direction: column; min-width: 0; }
+  .pch-rtitle { font-size: 1.02rem; color: var(--fg); }
+  .pch-rtitle-en { color: var(--muted); font-size: 0.85rem; font-family: var(--font-ui); }
+  .pch-rsub { font-family: var(--font-ui); font-size: 0.8rem; color: var(--muted); }
+  .pch-rnote { font-family: var(--font-ui); font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+  .pch-rbadge { font-family: var(--font-ui); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.2rem 0.55rem; border-radius: 999px; background: var(--alt); color: var(--muted); white-space: nowrap; }
+  .pch-rbadge.cat-festival { background: color-mix(in srgb, var(--pch) 20%, var(--surface)); color: var(--fg); }
+  .pch-rbadge.cat-vivah { background: color-mix(in srgb, #d86b7e 22%, var(--surface)); color: var(--fg); }
+  .pch-rbadge.cat-window { background: color-mix(in srgb, #c8341e 20%, var(--surface)); color: var(--fg); }
+  .pch-rlink { font-size: 1.2rem; color: var(--link); text-decoration: none; padding: 0 0.3rem; }
+
+  .pch-sources { margin-top: 2.5rem; font-family: var(--font-ui); }
+  .pch-sources h2 { font-size: 1.1rem; }
+  .pch-sources ul { list-style: none; padding: 0; margin: 0 0 0.8rem; display: grid; gap: 0.4rem; }
+  .pch-sources a { color: var(--link); text-decoration: underline; font-size: 0.9rem; }
+  .pch-place { color: var(--muted); font-size: 0.85rem; margin: 0; }
+
+  @media (max-width: 560px) {
+    .pch-grid2 { grid-template-columns: 1fr; }
+    .pch-gd { min-height: 58px; padding: 0.3rem 0.25rem; }
+    .pch-gnum { font-size: 0.92rem; }
+    .pch-gtithi { font-size: 0.6rem; }
+  }
+</style>

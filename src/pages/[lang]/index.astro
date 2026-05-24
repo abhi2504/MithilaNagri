@@ -4,6 +4,7 @@ import Icon from '../../components/Icon.astro';
 import Gallery from '../../components/media/Gallery.astro';
 import EntryCard from '../../components/content/EntryCard.astro';
 import RegionMap from '../../components/map/RegionMap.astro';
+import PanchangStrip from '../../components/content/PanchangStrip.astro';
 import { LOCALES, type Locale } from '../../i18n/locales';
 import { localizedPath, useTranslations } from '../../i18n/utils';
 import { NAV_ORDER, getSection } from '../../lib/constants';
@@ -97,6 +98,8 @@ const stats = [
     </div>
     <div class="divider-lotus hero-bottom" style="--accent:#e0a82e"></div>
   </section>
+
+  <PanchangStrip lang={lang} />
 
   <!-- WHAT & WHERE -->
   <section class="what container-wide">

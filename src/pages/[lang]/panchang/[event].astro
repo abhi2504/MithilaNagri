@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { readFileSync } from 'node:fs';
+import {
+  PANCHANG_YEAR, PANCHANG_PLACE, PANCHANG_DISCLAIMER, PANCHANG_SOURCES,
+  EKADASHI, FESTIVALS, MUHURAT, WINDOWS,
+} from '../../../data/panchang';
+
+// One SEO-focused page per high-search event/muhurat type.
+const EVENTS: Record<string, { en: string; dev: string; blurb: string; rows: { date: string; en: string; dev?: string; note?: string; link?: string }[]; withNak?: boolean }> = {};
+for (const m of MUHURAT) EVENTS[m.key] = { en: `${m.en} Muhurat ${PANCHANG_YEAR}`, dev: `${m.dev} मुहूर्त ${PANCHANG_YEAR}`, blurb: m.blurb, withNak: true, rows: m.dates.map((d) => ({ date: d, en: m.en, dev: m.dev, link: m.link })) };
+EVENTS['ekadashi'] = { en: `Ekadashi ${PANCHANG_YEAR}`, dev: `एकादशी ${PANCHANG_YEAR}`, blurb: 'All 24 Ekadashi fasting days of 2026 (including the two Adhik-Maas Ekadashis), with Devshayani and Devuthana that bound Chaturmas.', rows: EKADASHI.map((e) => ({ date: e.date, en: e.en, dev: e.dev, note: e.note })) };
+EVENTS['festivals'] = { en: `Festival Calendar ${PANCHANG_YEAR}`, dev: `पाबनि-तिहार ${PANCHANG_YEAR}`, blurb: 'Every major Mithila festival and vrat of 2026, with dates for Darbhanga.', rows: FESTIVALS.map((f) => ({ date: f.date, en: f.en, dev: f.dev, note: f.note, link: f.link })) };
+
+export function getStaticPaths() {
+  const keys = [...MUHURAT.map((m) => m.key), 'ekadashi', 'festivals'];
+  return LOCALES.flatMap((lang) => keys.map((event) => ({ params: { lang, event } })));
+}
+const lang = Astro.params.lang as Locale;
+const event = Astro.params.event as string;
+const cfg = EVENTS[event];
+if (!cfg) return Astro.redirect('/404');
+
+let dayMap: Record<string, any> = {};
+try {
+  const raw = JSON.parse(readFileSync(new URL('../../../../public/data/panchang-2026.json', import.meta.url), 'utf8'));
+  for (const d of raw.days) dayMap[d.d] = d;
+} catch {}
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const grouped: Record<string, typeof cfg.rows> = {};
+for (const r of cfg.rows) { const m = MONTHS[Number(r.date.slice(5, 7)) - 1]; (grouped[m] = grouped[m] || []).push(r); }
+const sub = (date: string) => { const dd = dayMap[date]; if (!dd) return ''; return cfg.withNak ? `${dd.wdDev} · ${dd.pak} ${dd.tithi} · ${dd.nak}` : `${dd.wdDev} · ${dd.pak} ${dd.tithi}`; };
+const accent = '#b8860b';
+const hubHref = localizedPath(lang, '/panchang/');
+---
+<BaseLayout title={`${cfg.en} · मैथिली पंचांग`} description={`${cfg.dev} — ${cfg.blurb}`} accent={accent} section="panchang">
+  <SectionHero lang={lang} title={cfg.dev} blurb={cfg.blurb} icon="sun" crumbs={[{ label: 'Panchang', href: hubHref }, { label: cfg.en }]} />
+
+  <div class="container-wide pchx" data-pagefind-body style={`--pch:${accent}`}>
+    <p class="pchx-disc">{PANCHANG_DISCLAIMER}</p>
+    <a class="pchx-back" href={hubHref}>← पूरा पंचांग · Full Panchang</a>
+
+    {MONTHS.filter((m) => grouped[m]).map((m) => (
+      <section class="pchx-mb">
+        <h2 class="pchx-mh">{m} {PANCHANG_YEAR}</h2>
+        <ul class="pchx-list" role="list">
+          {grouped[m].map((r) => (
+            <li class="pchx-row">
+              <span class="pchx-date">{Number(r.date.slice(8, 10))}</span>
+              <span class="pchx-body">
+                <span class="pchx-title">{r.dev ?? r.en}{r.dev && <span class="pchx-en"> · {r.en}</span>}</span>
+                {sub(r.date) && <span class="pchx-sub">{sub(r.date)}</span>}
+                {r.note && <span class="pchx-note">{r.note}</span>}
+              </span>
+              {r.link && <a class="pchx-link" href={r.link} aria-label={`Read about ${r.en}`}>→</a>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {cfg.rows.length === 0 && <p>No dates listed for {PANCHANG_YEAR}.</p>}
+
+    <section class="pchx-src">
+      <h2>स्रोत · Sources</h2>
+      <ul>{PANCHANG_SOURCES.map((s) => (<li><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>))}</ul>
+      <p class="pchx-place">Computed/compiled for {PANCHANG_PLACE}.</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .pchx { padding-block: 1.5rem 3rem; --pch: #b8860b; }
+  .pchx-disc {
+    font-family: var(--font-ui); font-size: 0.9rem; line-height: 1.55;
+    background: color-mix(in srgb, var(--pch) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--pch) 35%, var(--line));
+    border-radius: 12px; padding: 0.85rem 1.1rem; margin: 0 0 1rem; color: var(--fg);
+  }
+  .pchx-back { display: inline-block; font-family: var(--font-ui); font-weight: 600; font-size: 0.9rem; color: var(--link); text-decoration: underline; margin-bottom: 1.5rem; }
+  .pchx-mb { margin-bottom: 1.6rem; }
+  .pchx-mh { font-family: var(--font-ui); font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--pch); margin: 0 0 0.4rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+  .pchx-list { list-style: none; margin: 0; padding: 0; }
+  .pchx-row { display: grid; grid-template-columns: 2.4rem 1fr auto; gap: 0.7rem; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
+  .pchx-date { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--pch); text-align: center; }
+  .pchx-body { display: flex; flex-direction: column; min-width: 0; }
+  .pchx-title { font-size: 1.02rem; color: var(--fg); }
+  .pchx-en { color: var(--muted); font-size: 0.85rem; font-family: var(--font-ui); }
+  .pchx-sub { font-family: var(--font-ui); font-size: 0.8rem; color: var(--muted); }
+  .pchx-note { font-family: var(--font-ui); font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+  .pchx-link { font-size: 1.2rem; color: var(--link); text-decoration: none; }
+  .pchx-src { margin-top: 2rem; font-family: var(--font-ui); }
+  .pchx-src h2 { font-size: 1.05rem; }
+  .pchx-src ul { list-style: none; padding: 0; margin: 0 0 0.6rem; display: grid; gap: 0.35rem; }
+  .pchx-src a { color: var(--link); text-decoration: underline; font-size: 0.88rem; }
+  .pchx-place { color: var(--muted); font-size: 0.84rem; margin: 0; }
+</style>
