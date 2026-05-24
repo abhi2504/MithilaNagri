@@ -514,5 +514,13 @@ const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p
     .rs-panel {
       grid-template-columns: 1fr;
     }
+    /* On one column the image must NOT stick — it would pin to the top and the
+       text would scroll underneath it. Make it a normal banner that scrolls away. */
+    .rs-fig {
+      position: static;
+      top: auto;
+      height: auto;
+      aspect-ratio: 3 / 2;
+    }
   }
 </style>
