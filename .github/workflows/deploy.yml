@@ -24,10 +24,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # Builds the Astro site (runs `npm run build`, which also runs Pagefind),
-      # then uploads ./dist as the Pages artifact.
-      - name: Build with Astro
-        uses: withastro/action@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site (Astro + Pagefind)
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
   deploy:
     needs: build
