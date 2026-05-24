@@ -427,5 +427,27 @@
       "license": "CC0"
     },
     "status": "cleared"
+  },
+  "ai-gehuma-bairiya": {
+    "src": "/img/ai-gehuma-bairiya.jpg",
+    "alt": "Gehuma Bairiya — AI-generated illustration in the Mithila (Madhubani) style",
+    "credit": {
+      "source": "AI illustration (Pollinations · FLUX)",
+      "sourceUrl": "https://pollinations.ai",
+      "author": "Generated in Madhubani style",
+      "license": "CC0"
+    },
+    "status": "cleared"
+  },
+  "ai-siswar": {
+    "src": "/img/ai-siswar.jpg",
+    "alt": "Siswar — AI-generated illustration in the Mithila (Madhubani) style",
+    "credit": {
+      "source": "AI illustration (Pollinations · FLUX)",
+      "sourceUrl": "https://pollinations.ai",
+      "author": "Generated in Madhubani style",
+      "license": "CC0"
+    },
+    "status": "cleared"
   }
 }

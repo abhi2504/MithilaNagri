@@ -419,37 +419,100 @@ export function initAtlas() {
   }
 
   // ── interaction ──
+  // Track every active pointer so we can support one-finger pan AND two-finger
+  // pinch-zoom on touch devices (the canvas has touch-action:none, so the
+  // browser hands us the raw gestures and we implement them ourselves).
+  const pointers = new Map<number, { x: number; y: number }>();
   let dragging = false,
     moved = false,
     lastX = 0,
-    lastY = 0;
+    lastY = 0,
+    pinchDist = 0,
+    pinchCx = 0,
+    pinchCy = 0;
+
+  const localXY = (e: PointerEvent) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const midpoint = () => {
+    const pts = Array.from(pointers.values());
+    const r = canvas.getBoundingClientRect();
+    return {
+      d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y),
+      cx: (pts[0].x + pts[1].x) / 2 - r.left,
+      cy: (pts[0].y + pts[1].y) / 2 - r.top,
+    };
+  };
+
   canvas.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    moved = false;
-    lastX = e.clientX;
-    lastY = e.clientY;
     canvas.setPointerCapture(e.pointerId);
-    canvas.classList.add('grabbing');
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - lastX,
-      dy = e.clientY - lastY;
-    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-    panX += dx;
-    panY += dy;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    schedule();
-  });
-  canvas.addEventListener('pointerup', (e) => {
-    dragging = false;
-    canvas.classList.remove('grabbing');
-    if (!moved) {
-      const r = canvas.getBoundingClientRect();
-      hit(e.clientX - r.left, e.clientY - r.top);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      dragging = true;
+      moved = false;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.classList.add('grabbing');
+    } else if (pointers.size === 2) {
+      // second finger down → start a pinch, stop single-finger panning
+      dragging = false;
+      moved = true;
+      const m = midpoint();
+      pinchDist = m.d;
+      pinchCx = m.cx;
+      pinchCy = m.cy;
     }
   });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.size >= 2) {
+      // pinch: zoom by the change in finger distance, pan by midpoint drift
+      const m = midpoint();
+      if (pinchDist > 0) zoomAt(m.cx, m.cy, m.d / pinchDist);
+      panX += m.cx - pinchCx;
+      panY += m.cy - pinchCy;
+      pinchDist = m.d;
+      pinchCx = m.cx;
+      pinchCy = m.cy;
+      schedule();
+    } else if (dragging) {
+      const dx = e.clientX - lastX,
+        dy = e.clientY - lastY;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      panX += dx;
+      panY += dy;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      schedule();
+    }
+  });
+
+  const endPointer = (e: PointerEvent) => {
+    if (!pointers.has(e.pointerId)) return;
+    const wasTap = !moved && pointers.size === 1;
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinchDist = 0;
+    if (pointers.size === 1) {
+      // one finger remains → resume panning from it
+      const p = Array.from(pointers.values())[0];
+      dragging = true;
+      lastX = p.x;
+      lastY = p.y;
+    } else if (pointers.size === 0) {
+      dragging = false;
+      canvas.classList.remove('grabbing');
+      if (wasTap) {
+        const { x, y } = localXY(e);
+        hit(x, y);
+      }
+    }
+  };
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
   canvas.addEventListener(
     'wheel',
     (e) => {

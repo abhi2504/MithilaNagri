@@ -12,6 +12,11 @@ const { lang, section } = Astro.props;
 const t = useTranslations(lang);
 const path = Astro.url.pathname;
 const navSections = NAV_ORDER.map((id) => getSection(id)).filter(Boolean);
+// The interactive map is its own page (not a content section), so it needs an
+// explicit nav entry in both the desktop bar and the mobile menu.
+const mapHref = localizedPath(lang, '/map/');
+const isMap = /\/map\/?$/.test(path);
+const mapLabel = lang === 'hi' || lang === 'mai' ? 'नक्शा' : 'Map';
 
 const THEMES = [
   { key: 'paper', label: 'Paper', sw: '#f5ecdc' },
@@ -30,6 +35,9 @@ const THEMES = [
     </a>
 
     <nav class="primary-nav" aria-label="Sections">
+      <a href={mapHref} class:list={['nav-link', 'nav-map', { active: isMap }]} style="--accent:#2e4374">
+        {mapLabel}
+      </a>
       {
         navSections.map((s) => (
           <a
@@ -90,6 +98,9 @@ const THEMES = [
           <span class="hamburger" aria-hidden="true"></span>
         </summary>
         <nav class="mobile-nav" aria-label="Sections">
+          <a href={mapHref} class:list={['nav-link', 'nav-map', { active: isMap }]}>
+            <Icon name="pin" size={17} /> {mapLabel === 'Map' ? 'Interactive Map' : mapLabel}
+          </a>
           {
             navSections.map((s) => (
               <a href={localizedPath(lang, `/${s!.id}/`)} class:list={['nav-link', { active: section === s!.id }]}>
@@ -355,6 +366,16 @@ const THEMES = [
     font-size: 1rem;
     border-bottom: 1px solid var(--line);
     border-left: 0;
+  }
+  .mobile-nav .nav-map {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .mobile-nav .nav-map :global(svg) {
+    color: #c8341e;
   }
 
   @media (max-width: 1180px) {

@@ -74,6 +74,8 @@ export const MAP_POINTS: MapPoint[] = [
   { id: 'uchhaith', name: 'Uchhaith Bhagwati', type: 'shakti', lng: 86.13, lat: 26.45, blurb: 'A Durga shrine where the poet Kalidasa is said to have been blessed.' },
   { id: 'mithila-haat', name: 'Mithila Haat', type: 'venue', lng: 86.28, lat: 26.26, blurb: 'A cultural theme-park near Jhanjharpur — crafts, cuisine and performance.', link: { section: 'places', slug: 'mithila-haat' } },
   { id: 'andhratharhi', name: 'Andhra Tharhi', type: 'village', lng: 86.20, lat: 26.30, blurb: 'A historic block town of the Madhubani countryside.', link: { section: 'villages', slug: 'andhratharhi' } },
+  { id: 'gehuma-bairiya', name: 'Gehuma Bairiya', type: 'village', lng: 86.397, lat: 26.392, blurb: 'A large gram-panchayat village of the Phulparas block in eastern Madhubani.', img: 'ai-gehuma-bairiya', link: { section: 'villages', slug: 'gehuma-bairiya' } },
+  { id: 'siswar', name: 'Siswar', type: 'village', lng: 86.456, lat: 26.430, blurb: 'A Maithili farming village of the Phulparas block, near the Nepal border.', img: 'ai-siswar', link: { section: 'villages', slug: 'siswar' } },
 
   // ── Saharsa / Madhepura / Supaul (Kosi) ──
   { id: 'ugratara', name: 'Ugratara Sthan, Mahishi', type: 'shakti', lng: 86.47, lat: 25.983, blurb: 'A revered Shakti shrine — the only Ugratara temple in Bihar.', link: { section: 'places', slug: 'ugratara-mahishi' } },
