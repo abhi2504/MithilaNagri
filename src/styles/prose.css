@@ -1,0 +1,52 @@
+/* Long-form article typography (applies to slotted markdown via .prose). */
+.prose {
+  font-size: 1.075rem;
+  line-height: 1.75;
+  color: var(--fg);
+  max-width: 42rem;
+}
+.prose > * + * {
+  margin-top: 1.1rem;
+}
+.prose p {
+  margin: 0;
+}
+.prose h2 {
+  font-size: 1.6rem;
+  margin-top: 2.2rem;
+  margin-bottom: 0.4rem;
+}
+.prose h3 {
+  font-size: 1.25rem;
+  margin-top: 1.6rem;
+  margin-bottom: 0.3rem;
+}
+.prose a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose strong {
+  font-weight: 600;
+}
+.prose em {
+  font-style: italic;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.4rem;
+}
+.prose li {
+  margin-top: 0.4rem;
+}
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 2rem 0;
+}

@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import RegionMap from '../../../components/map/RegionMap.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('places')!;
+const entries = await getLocalizedEntries('places', lang);
+const points = entries
+  .filter((p: any) => typeof p.data.lat === 'number' && typeof p.data.lng === 'number')
+  .map((p: any) => ({
+    lng: p.data.lng,
+    lat: p.data.lat,
+    title: p.data.title,
+    type: p.data.placeType,
+    href: localizedPath(lang, `/places/${p.data.slug}/`),
+  }));
+const intro =
+  'From Janakpur’s marble Janaki Mandir to the Shakti shrine of Ugratara and the ruined palaces of the Darbhanga Raj, Mithila’s sacred and royal geography spans India and Nepal — much of it linked by the 15-day Mithila Madhya Parikrama. Explore it on the map, then dive into each site.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="places">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+    <RegionMap points={points} class="places-map" />
+    <p style="margin-top:0.75rem">
+      <a href={localizedPath(lang, '/map/')} style="color:var(--link);font-weight:600;text-decoration:underline;font-family:var(--font-ui)">Open the full interactive map →</a>
+    </p>
+    <ul class="card-grid" role="list" style="margin-top:2.5rem">
+      {
+        entries.map((e: any) => (
+          <li>
+            <EntryCard
+              href={localizedPath(lang, `/places/${e.data.slug}/`)}
+              title={e.data.title}
+              summary={e.data.summary}
+              cover={e.data.cover}
+              tag={e.data.district ? `${e.data.district}, ${e.data.country}` : e.data.placeType}
+              icon="arch"
+            />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

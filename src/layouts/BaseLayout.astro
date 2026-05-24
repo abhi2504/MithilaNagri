@@ -1,0 +1,189 @@
+---
+import '../styles/global.css';
+import '../styles/motifs.css';
+import '../styles/prose.css';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { getLangFromUrl, switchLocalePath } from '../i18n/utils';
+import { LOCALE_INFO, LOCALES } from '../i18n/locales';
+import { useTranslations } from '../i18n/utils';
+
+interface Props {
+  title: string;
+  description?: string;
+  accent?: string;
+  /** Section id for nav highlighting. */
+  section?: string;
+  /** Suppress the default sitewide tagline suffix. */
+  bareTitle?: boolean;
+}
+
+const { title, description, accent, section, bareTitle = false } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const info = LOCALE_INFO[lang];
+const t = useTranslations(lang);
+
+const fullTitle = bareTitle ? title : `${title} · Mithila`;
+const desc =
+  description ??
+  'The most comprehensive guide to Mithila / Mithilanchal — history, art, language, festivals, cuisine, places and people across India and Nepal.';
+
+const site = Astro.site ?? new URL('https://mithila.example');
+const canonical = new URL(Astro.url.pathname, site).href;
+const alternates = LOCALES.map((l) => ({
+  hreflang: LOCALE_INFO[l].bcp47,
+  href: new URL(switchLocalePath(Astro.url.pathname, l), site).href,
+}));
+
+const fontHref =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Tiro+Devanagari+Hindi&family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Tirhuta&display=swap';
+---
+<!doctype html>
+<html lang={info.bcp47} dir={info.dir} style={accent ? `--accent:${accent}` : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+    {alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(switchLocalePath(Astro.url.pathname, 'en'), site).href} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fontHref} />
+
+    <!-- No-flash theme init (default = night) -->
+    <script is:inline>
+      (() => {
+        try {
+          var t = localStorage.getItem('theme') || 'night';
+          if (t !== 'paper') document.documentElement.setAttribute('data-theme', t);
+        } catch (_) {
+          document.documentElement.setAttribute('data-theme', 'night');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <Header lang={lang} section={section} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+
+    <!-- Shared lightbox (used by all Gallery instances) -->
+    <dialog id="lightbox" class="lightbox" data-pagefind-ignore>
+      <button class="lightbox-close" type="button" aria-label={t('nav.close')}>×</button>
+      <figure>
+        <img id="lightbox-img" alt="" />
+        <figcaption>
+          <span id="lightbox-alt"></span>
+          <a id="lightbox-credit" target="_blank" rel="noopener noreferrer"></a>
+        </figcaption>
+      </figure>
+    </dialog>
+
+    <style>
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: var(--color-vermilion);
+        color: #fff;
+        padding: 0.6rem 1rem;
+        z-index: 100;
+        border-radius: 0 0 6px 0;
+      }
+      .skip-link:focus {
+        left: 0;
+      }
+      main {
+        min-height: 60vh;
+      }
+      .lightbox {
+        border: none;
+        background: transparent;
+        max-width: 92vw;
+        max-height: 92vh;
+        padding: 0;
+      }
+      .lightbox::backdrop {
+        background: rgba(10, 8, 6, 0.88);
+      }
+      .lightbox figure {
+        margin: 0;
+        max-width: 92vw;
+      }
+      .lightbox img {
+        max-width: 92vw;
+        max-height: 80vh;
+        object-fit: contain;
+        display: block;
+        border-radius: 6px;
+        background: #000;
+      }
+      .lightbox figcaption {
+        color: #f5ecdc;
+        font-family: var(--font-ui);
+        font-size: 0.85rem;
+        padding: 0.75rem 0.25rem 0;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      .lightbox #lightbox-credit {
+        color: var(--color-ochre);
+        text-decoration: underline;
+      }
+      .lightbox-close {
+        position: fixed;
+        top: 1rem;
+        right: 1.25rem;
+        font-size: 2rem;
+        line-height: 1;
+        color: #fff;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+
+    <script>
+      const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+      if (dialog) {
+        const img = document.getElementById('lightbox-img') as HTMLImageElement;
+        const altEl = document.getElementById('lightbox-alt')!;
+        const creditEl = document.getElementById('lightbox-credit') as HTMLAnchorElement;
+        const closeBtn = dialog.querySelector('.lightbox-close') as HTMLButtonElement;
+
+        document.addEventListener('click', (e) => {
+          const trigger = (e.target as HTMLElement).closest('.js-lightbox-trigger') as HTMLElement | null;
+          if (!trigger) return;
+          img.src = trigger.dataset.src || '';
+          img.alt = trigger.dataset.alt || '';
+          altEl.textContent = trigger.dataset.alt || '';
+          creditEl.textContent = trigger.dataset.credit || '';
+          creditEl.href = trigger.dataset.href || '#';
+          dialog.showModal();
+        });
+
+        closeBtn.addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', (e) => {
+          if (e.target === dialog) dialog.close();
+        });
+      }
+    </script>
+  </body>
+</html>

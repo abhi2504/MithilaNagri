@@ -1,0 +1,144 @@
+---
+import { NAV_ORDER, getSection, SITE_NAME_TIRHUTA } from '../../lib/constants';
+import { localizedPath, switchLocalePath, useTranslations } from '../../i18n/utils';
+import { LOCALES, LOCALE_INFO, type Locale } from '../../i18n/locales';
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const path = Astro.url.pathname;
+const navSections = NAV_ORDER.map((id) => getSection(id)).filter(Boolean);
+const year = new Date().getFullYear();
+---
+<footer class="site-footer" data-pagefind-ignore>
+  <div class="divider-lotus" aria-hidden="true" style="--accent: var(--color-ochre)"></div>
+  <div class="container-wide inner">
+    <div class="brand-col">
+      <span class="tirhuta font-tirhuta" aria-hidden="true">{SITE_NAME_TIRHUTA}</span>
+      <p class="proverb">माछ · पान · मखान</p>
+      <p class="proverb-en">“Maachh, Paan, Makhaan — the soul of Mithila.”</p>
+    </div>
+
+    <nav class="links" aria-label={t('footer.explore')}>
+      <h2>{t('footer.explore')}</h2>
+      <ul role="list">
+        {
+          navSections.map((s) => (
+            <li>
+              <a href={localizedPath(lang, `/${s!.id}/`)}>{s!.labels[lang]}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="meta">
+      <h2>{t('footer.about')}</h2>
+      <ul role="list">
+        <li><a href={localizedPath(lang, '/credits/')}>{t('footer.credits')}</a></li>
+        <li><a href={localizedPath(lang, '/search/')}>{t('nav.search')}</a></li>
+      </ul>
+      <h2>{t('footer.langs')}</h2>
+      <ul role="list" class="langs">
+        {
+          LOCALES.map((l) => (
+            <li>
+              <a href={switchLocalePath(path, l)} class:list={[{ active: l === lang }]}>
+                {LOCALE_INFO[l].native}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-wide colophon">
+    <p>{t('footer.note')}</p>
+    <p>© {year} Mithila Encyclopedia · A community heritage project.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    background: var(--color-ink);
+    color: #f0e6d2;
+  }
+  .inner {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 2rem;
+    padding-block: 2.5rem 1.5rem;
+  }
+  .tirhuta {
+    font-size: 2.2rem;
+    color: var(--color-ochre);
+    display: block;
+  }
+  .proverb {
+    font-family: var(--font-deva);
+    font-size: 1.1rem;
+    margin: 0.5rem 0 0.2rem;
+  }
+  .proverb-en {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    font-style: italic;
+    max-width: 22rem;
+  }
+  .site-footer h2 {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ochre);
+    margin: 0 0 0.75rem;
+  }
+  .site-footer ul {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 1rem;
+  }
+  .meta ul,
+  .langs {
+    grid-template-columns: 1fr;
+  }
+  .site-footer a {
+    color: #e7dcc6;
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+  }
+  .site-footer a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  .site-footer a.active {
+    color: var(--color-ochre);
+  }
+  .colophon {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-block: 1.25rem 2rem;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    opacity: 0.7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    justify-content: space-between;
+  }
+  @media (max-width: 760px) {
+    .inner {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .site-footer ul {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

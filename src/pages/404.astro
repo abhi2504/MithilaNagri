@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Page not found" accent="#c8341e">
+  <div class="container-wide notfound">
+    <p class="big">404</p>
+    <h1>This path isn’t on the map</h1>
+    <p>The page you’re looking for may have moved, or not been written yet.</p>
+    <a class="back" href="/en/">Return to Mithila →</a>
+  </div>
+</BaseLayout>
+
+<style>
+  .notfound {
+    text-align: center;
+    padding-block: 5rem 6rem;
+  }
+  .big {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    color: var(--color-vermilion);
+    margin: 0;
+    line-height: 1;
+  }
+  .notfound h1 {
+    margin: 0.5rem 0;
+  }
+  .back {
+    display: inline-block;
+    margin-top: 1.25rem;
+    color: var(--color-vermilion);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+</style>

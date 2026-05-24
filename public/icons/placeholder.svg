@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Mithila motif placeholder">
+  <rect width="400" height="300" fill="#EADFC7"/>
+  <g fill="none" stroke="#1B1714" stroke-width="2.5" opacity="0.45" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="14" width="372" height="272" rx="6"/>
+    <rect x="24" y="24" width="352" height="252" rx="4"/>
+    <path d="M200 220c-55 0-88-38-88-38s24-52 88-52 88 52 88 52-33 38-88 38Z"/>
+    <path d="M200 130c-16-26-8-52 0-70 8 18 16 44 0 70Z"/>
+    <path d="M200 130c-26-10-58-10-86 0M200 130c26-10 58-10 86 0"/>
+    <circle cx="200" cy="150" r="6" fill="#C8341E" stroke="none"/>
+  </g>
+  <text x="200" y="270" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#1B1714" opacity="0.5">Mithila</text>
+</svg>

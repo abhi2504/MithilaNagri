@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHero from '../../components/content/SectionHero.astro';
+import { allMedia, LICENSE_URL } from '../../lib/media';
+import { LOCALES, type Locale } from '../../i18n/locales';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const media = allMedia();
+---
+<BaseLayout title="Image credits" accent="#2e4374" section="credits">
+  <SectionHero
+    lang={lang}
+    title="Image credits & takedown"
+    blurb="Every image on the site is credited here."
+    icon="lotus"
+    crumbs={[{ label: 'Credits' }]}
+  />
+  <div class="container-wide hub">
+    <p class="hub-intro">
+      Images are embedded from open repositories — chiefly <strong>Wikimedia Commons</strong> —
+      and credited below with their source, author and licence. If you hold the rights to an image
+      and would like it removed, please get in touch and we will take it down promptly.
+    </p>
+    <ul class="credit-list" role="list">
+      {
+        media.map((m) => (
+          <li class="credit-row">
+            <img
+              class="credit-thumb"
+              src={m.src}
+              alt={m.alt}
+              loading="lazy"
+              decoding="async"
+              onerror="this.onerror=null;this.src='/icons/placeholder.svg';"
+            />
+            <div class="credit-meta">
+              <p class="ca">{m.alt}</p>
+              <p class="cm">
+                <a href={m.credit.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  {m.credit.source}
+                </a>
+                {m.credit.author ? ` · ${m.credit.author}` : ''}
+                {' · '}
+                {LICENSE_URL[m.credit.license] ? (
+                  <a href={LICENSE_URL[m.credit.license]} target="_blank" rel="noopener noreferrer">
+                    {m.credit.license}
+                  </a>
+                ) : (
+                  m.credit.license
+                )}
+              </p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .credit-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  .credit-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .credit-thumb {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--alt);
+  }
+  .ca {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .cm {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .cm a {
+    color: var(--link);
+    text-decoration: underline;
+  }
+</style>

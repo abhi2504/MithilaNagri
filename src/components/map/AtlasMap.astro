@@ -1,0 +1,330 @@
+---
+// A zoomable, pannable canvas atlas of Mithila. Renders ~2,900 real OSM
+// villages/towns + rivers (fetched from /data) plus our curated cultural
+// landmarks, with search and a detail panel. No remote tiles — works offline.
+import { MAP_TYPES, MAP_POINTS } from '../../data/map';
+import { DISTRICTS } from '../../data/map';
+import { getMedia } from '../../lib/media';
+import { localizedPath } from '../../i18n/utils';
+import type { Locale } from '../../i18n/locales';
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+
+const cultural = MAP_POINTS.map((p) => ({
+  id: p.id,
+  name: p.name,
+  type: p.type,
+  typeLabel: MAP_TYPES[p.type].label,
+  emoji: MAP_TYPES[p.type].emoji,
+  color: MAP_TYPES[p.type].color,
+  blurb: p.blurb,
+  img: p.img ? getMedia(p.img).src : null,
+  href: p.link ? localizedPath(lang, `/${p.link.section}/${p.link.slug}/`) : null,
+  g: [p.lng, p.lat],
+}));
+const districts = DISTRICTS.map((d) => ({ name: d.name, g: [d.lng, d.lat] }));
+const typesPresent = Object.keys(MAP_TYPES).filter((t) => MAP_POINTS.some((p) => p.type === t));
+---
+<div class="atlas" data-pagefind-ignore>
+  <div class="atlas-toolbar">
+    <div class="atlas-search">
+      <input id="atlas-q" type="search" placeholder="Search your village, a temple, a river…" aria-label="Search the map" autocomplete="off" />
+      <ul id="atlas-results" class="atlas-results" hidden></ul>
+    </div>
+    <div class="atlas-layers">
+      <button type="button" class="lyr active" data-layer="villages">🏡 Villages &amp; towns</button>
+      <button type="button" class="lyr active" data-layer="rivers">🌊 Rivers</button>
+      <button type="button" class="lyr active" data-layer="cultural">🛕 Landmarks</button>
+    </div>
+  </div>
+
+  <div class="atlas-filters">
+    {
+      typesPresent.map((t) => (
+        <button type="button" class="chip active" data-filter={t} style={`--mc:${MAP_TYPES[t].color}`}>
+          <span>{MAP_TYPES[t].emoji}</span> {MAP_TYPES[t].label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="atlas-stage">
+    <div class="atlas-canvas-wrap">
+      <canvas id="atlas-canvas" aria-label="Interactive map of Mithila"></canvas>
+      <div class="atlas-zoom">
+        <button type="button" id="z-in" aria-label="Zoom in">+</button>
+        <button type="button" id="z-out" aria-label="Zoom out">−</button>
+        <button type="button" id="z-reset" aria-label="Reset view">⤢</button>
+      </div>
+      <p class="atlas-loading" id="atlas-loading">Loading the map…</p>
+    </div>
+
+    <aside class="atlas-panel" id="atlas-panel" aria-live="polite">
+      <div class="ap-default">
+        <h2>Find your Mithila</h2>
+        <p>Zoom in to reveal the names of <strong id="ap-count">2,900+</strong> villages and towns. Drag to pan, scroll to zoom. Search above to jump to any place, river or landmark.</p>
+        <p class="ap-hint">Tap a marker to read about it here.</p>
+      </div>
+      <div class="ap-detail" hidden>
+        <button type="button" class="ap-close" aria-label="Close">×</button>
+        <img class="ap-img" alt="" hidden />
+        <span class="ap-type"></span>
+        <h2 class="ap-name"></h2>
+        <p class="ap-native" hidden></p>
+        <p class="ap-blurb"></p>
+        <div class="ap-links"></div>
+      </div>
+    </aside>
+  </div>
+
+  <script type="application/json" id="atlas-cultural" set:html={JSON.stringify(cultural)}></script>
+  <script type="application/json" id="atlas-districts" set:html={JSON.stringify(districts)}></script>
+</div>
+
+<style>
+  .atlas {
+    --panel-w: 340px;
+  }
+  .atlas-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+  .atlas-search {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+  }
+  #atlas-q {
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--fg);
+  }
+  .atlas-results {
+    position: absolute;
+    z-index: 20;
+    top: 110%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0.3rem;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.25);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .atlas-results li {
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .atlas-results li:hover,
+  .atlas-results li.active {
+    background: var(--alt);
+  }
+  .atlas-results .r-meta {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+  .atlas-layers {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .lyr,
+  .chip {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    padding: 0.34rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .lyr.active {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .atlas-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+  }
+  .chip.active {
+    color: #fff;
+    background: var(--mc);
+    border-color: var(--mc);
+  }
+
+  .atlas-stage {
+    display: grid;
+    grid-template-columns: 1fr var(--panel-w);
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .atlas-canvas-wrap {
+    position: relative;
+    height: 74vh;
+    min-height: 460px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #atlas-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    touch-action: none;
+  }
+  #atlas-canvas.grabbing {
+    cursor: grabbing;
+  }
+  .atlas-zoom {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .atlas-zoom button {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .atlas-zoom button:hover {
+    background: var(--alt);
+  }
+  .atlas-loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    background: var(--bg);
+  }
+
+  .atlas-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    padding: 1.25rem 1.3rem;
+    overflow-y: auto;
+    max-height: 74vh;
+  }
+  .atlas-panel h2 {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+  }
+  .atlas-panel p {
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 0.95rem;
+    margin: 0 0 0.7rem;
+  }
+  .ap-hint {
+    font-size: 0.85rem !important;
+  }
+  .ap-detail {
+    position: relative;
+  }
+  .ap-close {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .ap-img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+  }
+  .ap-type {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: var(--mc, var(--color-vermilion));
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+  .ap-name {
+    margin: 0.5rem 0 0.2rem !important;
+    color: var(--fg) !important;
+  }
+  .ap-native {
+    font-family: var(--font-deva);
+    font-size: 1.1rem;
+    color: var(--fg) !important;
+    margin: 0 0 0.5rem !important;
+  }
+  .ap-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .ap-links a {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--link);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 900px) {
+    .atlas-stage {
+      grid-template-columns: 1fr;
+    }
+    .atlas-panel {
+      max-height: none;
+    }
+    .atlas-canvas-wrap {
+      height: 60vh;
+    }
+  }
+</style>
+
+<script>
+  import { initAtlas } from '../../scripts/atlas.ts';
+  initAtlas();
+</script>

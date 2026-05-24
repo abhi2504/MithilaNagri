@@ -1,0 +1,35 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import { render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getEntryKeys, getLocalizedEntry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const slugs = await getEntryKeys('dishes');
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('dishes', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+const facts: any[] = [
+  d.category && { label: 'Category', value: d.category },
+  d.keyIngredients?.length && { label: 'Key ingredients', value: d.keyIngredients.join(', ') },
+  d.occasion && { label: 'Occasion', value: d.occasion },
+  d.giProduct && { label: 'Note', value: 'GI-tagged product' },
+].filter(Boolean);
+---
+<EntryLayout
+  lang={lang}
+  section="cuisine"
+  title={d.title}
+  summary={d.summary}
+  cover={d.cover}
+  gallery={d.gallery}
+  facts={facts}
+  sources={d.sources}
+>
+  <Content />
+</EntryLayout>

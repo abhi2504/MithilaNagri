@@ -1,0 +1,297 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import CreditedImage from '../../../components/media/CreditedImage.astro';
+import Transliterator from '../../../components/language/Transliterator.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { VOWELS, CONSONANTS, DIGITS } from '../../../data/tirhuta';
+import { GLOSSARY, PHRASES, LITERARY_CANON } from '../../../data/maithili';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('language')!;
+const facts = [
+  { n: '~17M', l: 'native speakers' },
+  { n: '2003', l: '8th Schedule of India' },
+  { n: '7th c.', l: 'earliest Tirhuta epigraphy' },
+  { n: '2014', l: 'Tirhuta added to Unicode' },
+];
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="language">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">
+      Maithili is an Eastern Indo-Aryan language of some 17 million speakers, written today in
+      Devanagari but historically in its own elegant <strong>Tirhuta</strong> (Mithilakshar) script.
+      It carries one of India’s great literary traditions — and a thousand-year-old system of
+      genealogy, the Panji.
+    </p>
+
+    <ul class="facts" role="list">
+      {facts.map((f) => (<li><strong>{f.n}</strong><span>{f.l}</span></li>))}
+    </ul>
+
+    <!-- Transliterator -->
+    <h2 class="block-title accent-underline">See your words in Tirhuta</h2>
+    <Transliterator />
+
+    <!-- Alphabet -->
+    <h2 class="block-title accent-underline">The Tirhuta alphabet</h2>
+    <h3 class="sub">Vowels</h3>
+    <ul class="glyphs" role="list">
+      {VOWELS.map((g) => (
+        <li class="glyph" title={g.code}>
+          <span class="g-tir font-tirhuta">{g.tirhuta}</span>
+          <span class="g-deva">{g.deva}</span>
+          <span class="g-rom">{g.roman}</span>
+        </li>
+      ))}
+    </ul>
+    <h3 class="sub">Consonants</h3>
+    <ul class="glyphs" role="list">
+      {CONSONANTS.map((g) => (
+        <li class="glyph" title={g.code}>
+          <span class="g-tir font-tirhuta">{g.tirhuta}</span>
+          <span class="g-deva">{g.deva}</span>
+          <span class="g-rom">{g.roman}</span>
+        </li>
+      ))}
+    </ul>
+    <h3 class="sub">Numerals</h3>
+    <ul class="glyphs digits" role="list">
+      {DIGITS.map((g) => (
+        <li class="glyph" title={g.code}>
+          <span class="g-tir font-tirhuta">{g.tirhuta}</span>
+          <span class="g-rom">{g.roman}</span>
+        </li>
+      ))}
+    </ul>
+    <figure class="inscription">
+      <CreditedImage id="lang-tirhuta-inscription" class="kohbar-frame" />
+      <figcaption>A Tirhuta-script inscription — the script reached its current form by the 10th century.</figcaption>
+    </figure>
+
+    <!-- Glossary -->
+    <h2 class="block-title accent-underline">A little Maithili</h2>
+    <div class="gloss-grid">
+      {GLOSSARY.map((group) => (
+        <div class="gloss-group kohbar-frame">
+          <h3>{group.title}</h3>
+          <table>
+            <tbody>
+              {group.terms.map((tm) => (
+                <tr>
+                  <td class="t-deva">{tm.deva}</td>
+                  <td class="t-rom">{tm.roman}</td>
+                  <td class="t-en">{tm.en}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+
+    <!-- Phrasebook -->
+    <h2 class="block-title accent-underline">Phrasebook</h2>
+    <table class="phrases kohbar-frame">
+      <tbody>
+        {PHRASES.map((p) => (
+          <tr>
+            <td class="t-deva">{p.deva}</td>
+            <td class="t-rom">{p.roman}</td>
+            <td class="t-en">{p.en}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <!-- Literature -->
+    <h2 class="block-title accent-underline">The Maithili literary canon</h2>
+    <ol class="canon" role="list">
+      {LITERARY_CANON.map((w) => (
+        <li class="canon-item">
+          <span class="c-year">{w.year}</span>
+          <div>
+            <h3>{w.work} <em>— {w.author}</em></h3>
+            <p>{w.note}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="more">
+      Read more about <a href={localizedPath(lang, '/people/vidyapati/')}>Vidyapati</a>, the poet who
+      made Maithili a literary language.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .facts {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  .facts li {
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid var(--accent);
+    padding-left: 0.8rem;
+  }
+  .facts strong {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+  .facts span {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .block-title {
+    font-size: 1.5rem;
+    margin: 2.75rem 0 1.25rem;
+  }
+  .sub {
+    font-size: 1rem;
+    color: var(--muted);
+    margin: 1.25rem 0 0.6rem;
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .glyphs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 0.6rem;
+  }
+  .glyph {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6rem 0.3rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .g-tir {
+    font-size: 1.9rem;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .g-deva {
+    font-family: var(--font-deva);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+  }
+  .g-rom {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .inscription {
+    margin: 1.75rem 0 0;
+  }
+  .inscription :global(.credited-image) {
+    aspect-ratio: 16 / 9;
+    max-height: 360px;
+  }
+  .inscription figcaption {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .gloss-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.1rem;
+  }
+  .gloss-group {
+    background: var(--surface);
+    padding: 1.1rem 1.2rem;
+  }
+  .gloss-group h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  td {
+    padding: 0.3rem 0.4rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .t-deva {
+    font-family: var(--font-deva);
+    white-space: nowrap;
+  }
+  .t-rom {
+    font-family: var(--font-ui);
+    font-style: italic;
+    color: var(--muted);
+  }
+  .t-en {
+    width: 45%;
+  }
+  .phrases {
+    background: var(--surface);
+    padding: 0.6rem 1rem;
+  }
+  .canon {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .canon-item {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .c-year {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .canon-item h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+  }
+  .canon-item em {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.95rem;
+  }
+  .canon-item p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .more {
+    margin-top: 1.5rem;
+    font-size: 1.05rem;
+  }
+  .more a {
+    color: var(--accent);
+    text-decoration: underline;
+    font-weight: 600;
+  }
+</style>

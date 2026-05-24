@@ -1,0 +1,93 @@
+---
+import CreditedImage from '../media/CreditedImage.astro';
+import Icon from '../Icon.astro';
+
+interface Props {
+  href: string;
+  title: string;
+  summary?: string;
+  cover?: string;
+  tag?: string;
+  icon?: string;
+}
+const { href, title, summary, cover, tag, icon = 'lotus' } = Astro.props;
+---
+<a class="entry-card" href={href} data-pagefind-ignore="false">
+  <div class="thumb kohbar-frame">
+    {
+      cover ? (
+        <CreditedImage id={cover} class="thumb-img" showCredit={false} />
+      ) : (
+        <div class="thumb-ph">
+          <Icon name={icon} size={46} />
+        </div>
+      )
+    }
+  </div>
+  <div class="body">
+    {tag && <span class="tag">{tag}</span>}
+    <h3>{title}</h3>
+    {summary && <p>{summary}</p>}
+  </div>
+</a>
+
+<style>
+  .entry-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .thumb {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+  }
+  .thumb :global(.credited-image),
+  .thumb-img {
+    width: 100%;
+    height: 100%;
+  }
+  .thumb :global(img) {
+    transition: transform 0.45s ease;
+  }
+  .entry-card:hover .thumb :global(img) {
+    transform: scale(1.05);
+  }
+  .thumb-ph {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+    background-color: color-mix(in srgb, var(--accent) 11%, var(--surface));
+    background-image: radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--accent) 26%, transparent) 1.4px,
+      transparent 1.7px
+    );
+    background-size: 15px 15px;
+  }
+  .tag {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .entry-card h3 {
+    font-size: 1.2rem;
+    margin: 0.15rem 0 0;
+    line-height: 1.2;
+  }
+  .entry-card p {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry-card:hover .thumb :global(img) {
+      transform: none;
+    }
+  }
+</style>

@@ -1,0 +1,177 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import RegionMap from '../../../components/map/RegionMap.astro';
+import Icon from '../../../components/Icon.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('villages')!;
+const villages = await getLocalizedEntries('villages', lang);
+const points = villages
+  .filter((v: any) => typeof v.data.lat === 'number' && typeof v.data.lng === 'number')
+  .map((v: any) => ({
+    lng: v.data.lng,
+    lat: v.data.lat,
+    title: v.data.title,
+    type: 'village',
+    href: localizedPath(lang, `/villages/${v.data.slug}/`),
+  }));
+const districts = [...new Set(villages.map((v: any) => v.data.district).filter(Boolean))].sort();
+const intro =
+  'A growing, mappable directory of Mithila’s villages and small towns — the homes of poets and painters, the sites of temples and marriage assemblies. We begin with the well-documented places; the long tail of the region’s thousands of villages will be filled from public records and community contributions.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="villages">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+
+    <RegionMap points={points} />
+
+    <div class="v-controls">
+      <input id="v-search" type="search" placeholder="Search villages…" aria-label="Search villages" autocomplete="off" />
+      <select id="v-district" aria-label="Filter by district">
+        <option value="">All districts</option>
+        {districts.map((d) => <option value={d}>{d}</option>)}
+      </select>
+      <span id="v-count" class="v-count"></span>
+    </div>
+
+    <ul class="v-grid" role="list" id="v-grid">
+      {
+        villages.map((v: any) => (
+          <li
+            class="v-card kohbar-frame"
+            data-name={`${v.data.title} ${v.data.nameNative ?? ''} ${v.data.famousFor}`.toLowerCase()}
+            data-district={v.data.district ?? ''}
+          >
+            <a href={localizedPath(lang, `/villages/${v.data.slug}/`)}>
+              <div class="v-head">
+                <span class="v-icon" aria-hidden="true"><Icon name="hut" size={22} /></span>
+                <div>
+                  <h3>{v.data.title}{v.data.nameNative && <span class="v-native"> {v.data.nameNative}</span>}</h3>
+                  <span class="v-loc">{[v.data.district, v.data.country === 'NP' ? 'Nepal' : 'India'].filter(Boolean).join(', ')}</span>
+                </div>
+              </div>
+              <p>{v.data.famousFor}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p id="v-empty" class="v-empty" hidden>No villages match your search.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  .v-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 2rem 0 1.5rem;
+  }
+  #v-search,
+  #v-district {
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--fg);
+  }
+  #v-search {
+    flex: 1;
+    min-width: 200px;
+  }
+  .v-count {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .v-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.1rem;
+  }
+  .v-card {
+    background: var(--surface);
+    padding: 1.1rem 1.2rem;
+    transition: transform 0.16s ease;
+  }
+  .v-card:hover {
+    transform: translateY(-2px);
+  }
+  .v-head {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+  .v-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .v-card h3 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .v-native {
+    font-family: var(--font-deva);
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+  .v-loc {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+  .v-card p {
+    margin: 0.6rem 0 0;
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .v-empty {
+    color: var(--muted);
+    font-family: var(--font-ui);
+    margin-top: 1.5rem;
+  }
+</style>
+
+<script>
+  const search = document.getElementById('v-search') as HTMLInputElement | null;
+  const district = document.getElementById('v-district') as HTMLSelectElement | null;
+  const grid = document.getElementById('v-grid');
+  const empty = document.getElementById('v-empty');
+  const count = document.getElementById('v-count');
+  const cards = Array.from(grid?.querySelectorAll<HTMLElement>('.v-card') ?? []);
+
+  function apply() {
+    const q = (search?.value || '').trim().toLowerCase();
+    const d = district?.value || '';
+    let shown = 0;
+    for (const c of cards) {
+      const matchQ = !q || (c.dataset.name || '').includes(q);
+      const matchD = !d || c.dataset.district === d;
+      const show = matchQ && matchD;
+      c.style.display = show ? '' : 'none';
+      if (show) shown++;
+    }
+    if (empty) empty.hidden = shown !== 0;
+    if (count) count.textContent = `${shown} village${shown === 1 ? '' : 's'}`;
+  }
+  search?.addEventListener('input', apply);
+  district?.addEventListener('change', apply);
+  apply();
+</script>

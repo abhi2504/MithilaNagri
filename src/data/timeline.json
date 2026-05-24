@@ -1,0 +1,135 @@
+[
+  {
+    "id": "videha",
+    "lang": "en",
+    "year": -1100,
+    "era": "ancient",
+    "title": "The Videha kingdom & King Janaka",
+    "body": "Mithila rises as the kingdom of Videha, ruled by a line of philosopher-kings titled 'Janaka'. The court of King Janaka — father of Sita — draws sages such as Yajnavalkya and Gargi.",
+    "place": "Mithila (Janakpur)"
+  },
+  {
+    "id": "republic",
+    "lang": "en",
+    "year": -600,
+    "era": "ancient",
+    "title": "From kingdom to republic",
+    "body": "After the monarchy ends, Videha becomes part of the Vajji confederacy centred on Vaishali — among the earliest experiments in republican government."
+  },
+  {
+    "id": "mahavira",
+    "lang": "en",
+    "year": -540,
+    "era": "ancient",
+    "title": "Mahavira & the age of the great teachers",
+    "body": "Vardhamana Mahavira, the 24th Jain Tirthankara, is born (traditionally in the 6th century BCE) at Kundagrama near Vaishali, in the Vajji republic. The Buddha too preaches and spends rains-retreats at Vaishali, making the Mithila plains a cradle of India's new philosophies.",
+    "place": "Vaishali"
+  },
+  {
+    "id": "magadha",
+    "lang": "en",
+    "year": -468,
+    "era": "ancient",
+    "title": "Absorbed by Magadha",
+    "body": "Ajatashatru of Magadha defeats the Vajji league; Mithila is folded into the Magadhan empire."
+  },
+  {
+    "id": "karnat",
+    "lang": "en",
+    "year": 1097,
+    "era": "medieval",
+    "title": "The Karnat dynasty",
+    "body": "Nanyadeva founds the Karnat dynasty with its capital at Simraungadh on today's India–Nepal border, beginning a cultural golden age.",
+    "place": "Simraungadh"
+  },
+  {
+    "id": "varna-ratnakara",
+    "lang": "en",
+    "year": 1324,
+    "era": "medieval",
+    "title": "Varna Ratnakara & the Panji",
+    "body": "Jyotirishwar Thakur writes the Varna Ratnakara — the oldest Maithili prose, and among the earliest prose in any modern Indian language. The Panji genealogical system is instituted."
+  },
+  {
+    "id": "oiniwar",
+    "lang": "en",
+    "year": 1325,
+    "era": "medieval",
+    "title": "The Oiniwar dynasty & Vidyapati",
+    "body": "Under the Maithil-Brahmin Oiniwar kings, the poet Vidyapati composes his Padavali, transforming Maithili into a literary language."
+  },
+  {
+    "id": "darbhanga-raj",
+    "lang": "en",
+    "year": 1557,
+    "era": "medieval",
+    "title": "The Darbhanga Raj",
+    "body": "Mahesh Thakur, granted authority by Emperor Akbar, founds the Khandavala (Darbhanga Raj) dynasty — which becomes the largest and richest zamindari of north Bihar.",
+    "place": "Darbhanga"
+  },
+  {
+    "id": "sugauli",
+    "lang": "en",
+    "year": 1816,
+    "era": "colonial",
+    "title": "The Treaty of Sugauli",
+    "body": "The Anglo-Nepalese War ends; the treaty fixes the border that splits historic Mithila between British India and Nepal."
+  },
+  {
+    "id": "tirhut-railway",
+    "lang": "en",
+    "year": 1874,
+    "era": "colonial",
+    "title": "The Tirhut Railway",
+    "body": "Maharaja Lakshmeshwar Singh launches the Tirhut Railway, often called India's first private railway, alongside schools, hospitals and famine relief."
+  },
+  {
+    "id": "janaki-mandir",
+    "lang": "en",
+    "year": 1898,
+    "era": "colonial",
+    "title": "Janaki Mandir at Janakpur",
+    "body": "Queen Vrisha Bhanu of Tikamgarh funds the great marble Janaki Mandir on the spot held to be Sita's home — the grandest temple of the Mithila world and the heart of modern Janakpur.",
+    "place": "Janakpur"
+  },
+  {
+    "id": "akademi",
+    "lang": "en",
+    "year": 1965,
+    "era": "modern",
+    "title": "Maithili recognised by the Sahitya Akademi",
+    "body": "India's national academy of letters formally recognises Maithili as an independent literary language; the first Akademi award for Maithili follows in 1966."
+  },
+  {
+    "id": "eighth-schedule",
+    "lang": "en",
+    "year": 2003,
+    "era": "modern",
+    "title": "Maithili enters the Eighth Schedule",
+    "body": "The 92nd Constitutional Amendment adds Maithili to the Eighth Schedule of the Indian Constitution, granting it official recognition after a long campaign."
+  },
+  {
+    "id": "makhana-gi",
+    "lang": "en",
+    "year": 2022,
+    "era": "modern",
+    "title": "Mithila Makhana wins a GI tag",
+    "body": "Mithila Makhana receives a Geographical Indication tag, protecting the fox-nut that grows in the region's ponds and accounts for the bulk of India's production."
+  },
+  {
+    "id": "karpoori-bharat-ratna",
+    "lang": "en",
+    "year": 2024,
+    "era": "modern",
+    "title": "Bharat Ratna for Karpoori Thakur",
+    "body": "Karpoori Thakur, the 'Jan Nayak' and twice Chief Minister of Bihar, is awarded the Bharat Ratna posthumously — a rare national honour for a son of the region's backward-caste movement."
+  },
+  {
+    "id": "statehood",
+    "lang": "en",
+    "year": 2024,
+    "era": "modern",
+    "title": "The statehood demand endures",
+    "body": "The long-running campaign for a separate Mithila state resurfaces in public debate, alongside calls for classical-language status for Maithili."
+  }
+]

@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import AtlasMap from '../../../components/map/AtlasMap.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+---
+<BaseLayout
+  title="Map of Mithila"
+  description="An interactive map of Mithila across India and Nepal — temples, palaces, Shakti-peethas, art villages, rivers and towns."
+  accent="#2e4374"
+  section="discover"
+>
+  <SectionHero
+    lang={lang}
+    title="Map of Mithila"
+    blurb="Temples, palaces, art villages, rivers and towns across India and Nepal — tap any marker to explore it here."
+    icon="pin"
+    crumbs={[{ label: 'Map' }]}
+  />
+  <div class="atlas-page">
+    <AtlasMap lang={lang} />
+  </div>
+</BaseLayout>
+
+<style>
+  .atlas-page {
+    width: 100%;
+    max-width: 96rem;
+    margin-inline: auto;
+    padding: 1.75rem 1.25rem 3.5rem;
+  }
+</style>

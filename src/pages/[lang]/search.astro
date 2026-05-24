@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHero from '../../components/content/SectionHero.astro';
+import { LOCALES, type Locale } from '../../i18n/locales';
+import { useTranslations } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const t = useTranslations(lang);
+---
+<BaseLayout title={t('nav.search')} accent="#3e7c4f" section="search">
+  <SectionHero lang={lang} title={t('nav.search')} icon="search" crumbs={[{ label: t('nav.search') }]} />
+  <div class="container-wide hub">
+    <div id="search" data-pagefind-ignore></div>
+    <noscript>
+      <p class="hub-intro">Search requires JavaScript.</p>
+    </noscript>
+  </div>
+
+  <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+  <script is:inline src="/pagefind/pagefind-ui.js"></script>
+  <script is:inline define:vars={{ lang }}>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof PagefindUI === 'undefined') {
+        document.getElementById('search').innerHTML =
+          '<p style="color:var(--muted);font-family:var(--font-ui)">Search is available on the built site (run a production build). It is not active in dev mode.</p>';
+        return;
+      }
+      new PagefindUI({
+        element: '#search',
+        showSubResults: true,
+        showImages: false,
+      });
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  #search {
+    margin-top: 0.5rem;
+    --pagefind-ui-primary: var(--color-vermilion);
+    --pagefind-ui-font: var(--font-ui);
+  }
+</style>

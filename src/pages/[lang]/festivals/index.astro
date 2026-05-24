@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('festivals')!;
+const accent = s.accent;
+const entries = await getLocalizedEntries('festivals', lang);
+const bySlug: Record<string, any> = Object.fromEntries(entries.map((e: any) => [e.data.slug, e]));
+
+// The Maithil festival year, month by month — grouped into five seasonal bands
+const SEASONS = [
+  { title: 'Magh–Phalgun · winter into spring', note: 'January – March', slugs: ['makar-sankranti', 'saraswati-puja', 'phaguaa'] },
+  { title: 'Chait–Baisakh · spring & the new year', note: 'March – May', slugs: ['ram-navami', 'jur-sital', 'sita-navami'] },
+  { title: 'Jeth–Sawan · summer & the monsoon', note: 'May – August', slugs: ['vat-savitri', 'naag-panchami', 'madhushravani'] },
+  { title: 'Bhado–Aaswin · early autumn', note: 'September – October', slugs: ['indra-puja', 'jitiya', 'jhijhiya', 'durga-puja', 'kojagara'] },
+  { title: 'Kartik–Aghan · late autumn', note: 'October – December', slugs: ['chhath', 'sama-chakeva', 'vivaha-panchami'] },
+];
+const groups = SEASONS.map((g) => ({ ...g, items: g.slugs.map((slug) => bySlug[slug]).filter(Boolean) })).filter((g) => g.items.length);
+// any festival not placed in a band (safety net) so none ever disappears
+const placed = new Set(SEASONS.flatMap((g) => g.slugs));
+const leftover = entries.filter((e: any) => !placed.has(e.data.slug));
+
+const intro =
+  'The Maithil year is measured in festivals — from the kite-strung Makar Sankranti of deep winter to the sun-worship of Chhath in autumn. Follow the calendar through the seasons: spring’s colours, the monsoon vows, the goddess-nights of autumn, and the rivers and harvests that bind them. Many are led by women and found, in this form, almost nowhere else.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={accent} section="festivals">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body style={`--accent:${accent}`}>
+    <p class="hub-intro">{intro}</p>
+
+    {groups.map((g) => (
+      <section class="fest-season">
+        <h2 class="fest-season-title">{g.title}</h2>
+        <p class="fest-season-note">{g.note}</p>
+        <ul class="card-grid" role="list">
+          {g.items.map((e: any) => (
+            <li>
+              <EntryCard
+                href={localizedPath(lang, `/festivals/${e.data.slug}/`)}
+                title={e.data.title}
+                summary={e.data.summary}
+                cover={e.data.cover}
+                tag={e.data.gregorian}
+                icon="sun"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {leftover.length > 0 && (
+      <section class="fest-season">
+        <h2 class="fest-season-title">More festivals</h2>
+        <ul class="card-grid" role="list">
+          {leftover.map((e: any) => (
+            <li>
+              <EntryCard
+                href={localizedPath(lang, `/festivals/${e.data.slug}/`)}
+                title={e.data.title}
+                summary={e.data.summary}
+                cover={e.data.cover}
+                tag={e.data.gregorian}
+                icon="sun"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .fest-season { margin-top: 2.2rem; }
+  .fest-season:first-of-type { margin-top: 1.4rem; }
+  .fest-season-title {
+    font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+    margin: 0;
+    color: var(--fg);
+  }
+  .fest-season-title::after {
+    content: '';
+    display: block;
+    width: 52px;
+    height: 3px;
+    margin-top: 0.45rem;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .fest-season-note {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0.5rem 0 1rem;
+  }
+</style>

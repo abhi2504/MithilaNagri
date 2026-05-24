@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import RegionMap from '../../../components/map/RegionMap.astro';
+import Icon from '../../../components/Icon.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath, useTranslations } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const t = useTranslations(lang);
+const s = getSection('discover')!;
+const places = await getLocalizedEntries('places', lang);
+const points = places
+  .filter((p: any) => typeof p.data.lat === 'number' && typeof p.data.lng === 'number')
+  .map((p: any) => ({
+    lng: p.data.lng,
+    lat: p.data.lat,
+    title: p.data.title,
+    type: p.data.placeType,
+    href: localizedPath(lang, `/places/${p.data.slug}/`),
+  }));
+const facts = await getLocalizedEntries('didYouKnow', lang);
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="discover">
+  <SectionHero lang={lang} title={t('home.what.title')} blurb={t('home.what.body')} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <RegionMap points={points} />
+
+    <h2 class="section-title accent-underline" style="margin-top:3rem">{t('home.didyouknow.title')}</h2>
+    <ul class="dyk-grid" role="list">
+      {
+        facts.map((f: any) => (
+          <li class="dyk-card kohbar-frame">
+            <span class="dyk-mark" aria-hidden="true"><Icon name="fish" size={18} /></span>
+            <p>{f.data.fact}</p>
+            {f.data.sourceUrl && (
+              <a href={f.data.sourceUrl} target="_blank" rel="noopener noreferrer">{t('common.source')}</a>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .section-title {
+    font-size: 1.7rem;
+    margin-bottom: 1.5rem;
+  }
+  .dyk-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.1rem;
+  }
+  .dyk-card {
+    --c: var(--color-vermilion);
+    background: color-mix(in srgb, var(--c) 10%, var(--surface));
+    padding: 1.2rem 1.3rem;
+  }
+  .dyk-card:nth-child(5n + 2) {
+    --c: var(--color-indigo);
+  }
+  .dyk-card:nth-child(5n + 3) {
+    --c: var(--color-leaf);
+  }
+  .dyk-card:nth-child(5n + 4) {
+    --c: var(--color-ochre);
+  }
+  .dyk-card:nth-child(5n + 5) {
+    --c: var(--color-rose);
+  }
+  .dyk-mark {
+    color: var(--c);
+  }
+  .dyk-card p {
+    margin: 0.4rem 0 0.6rem;
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .dyk-card a {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    color: var(--color-indigo);
+    text-decoration: underline;
+  }
+</style>

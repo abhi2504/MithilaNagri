@@ -1,0 +1,42 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import { render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getEntryKeys, getLocalizedEntry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const slugs = await getEntryKeys('places');
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('places', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+const where = [d.district, d.state, d.country === 'NP' ? 'Nepal' : 'India'].filter(Boolean).join(', ');
+const facts: any[] = [
+  d.placeType && { label: 'Type', value: d.placeType },
+  where && { label: 'Where', value: where },
+  d.deity && { label: 'Deity', value: d.deity },
+  d.built && { label: 'Built', value: d.built },
+  d.nearestRail && { label: 'Nearest rail', value: d.nearestRail },
+  d.nearestAir && { label: 'Nearest airport', value: d.nearestAir },
+  d.bestSeason && { label: 'Best season', value: d.bestSeason },
+  d.timings && { label: 'Timings', value: d.timings },
+  d.entryFee && { label: 'Entry', value: d.entryFee },
+  d.circuit && { label: 'On circuit', value: d.circuit },
+].filter(Boolean);
+---
+<EntryLayout
+  lang={lang}
+  section="places"
+  title={d.title}
+  summary={d.summary}
+  cover={d.cover}
+  gallery={d.gallery}
+  facts={facts}
+  sources={d.sources}
+>
+  <Content />
+</EntryLayout>

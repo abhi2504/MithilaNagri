@@ -1,0 +1,40 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import { render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getEntryKeys, getLocalizedEntry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const slugs = await getEntryKeys('personalities');
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('personalities', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+const life =
+  d.birthYear && d.deathYear ? `${d.birthYear}–${d.deathYear}` : d.birthYear ? `b. ${d.birthYear}` : undefined;
+const facts: any[] = [
+  life && { label: 'Life', value: life },
+  d.birthPlace && { label: 'From', value: d.birthPlace },
+  d.domains?.length && { label: 'Field', value: d.domains.join(', ') },
+  ...(d.honors ?? []).map((h: any) => ({
+    label: 'Honour',
+    value: h.year ? `${h.name} (${h.year})` : h.name,
+  })),
+].filter(Boolean);
+---
+<EntryLayout
+  lang={lang}
+  section="people"
+  title={d.title}
+  summary={d.summary}
+  cover={d.cover}
+  gallery={d.gallery}
+  facts={facts}
+  sources={d.sources}
+>
+  <Content />
+</EntryLayout>

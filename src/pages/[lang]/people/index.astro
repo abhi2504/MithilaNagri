@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('people')!;
+const entries = await getLocalizedEntries('personalities', lang);
+
+// group by era
+const ERA_ORDER = ['ancient', 'medieval', 'colonial', 'modern', 'contemporary'];
+const ERA_LABEL: Record<string, string> = {
+  ancient: 'Ancient & Vedic',
+  medieval: 'Medieval',
+  colonial: 'Colonial era',
+  modern: 'Modern',
+  contemporary: 'Contemporary',
+};
+const byEra = ERA_ORDER.map((era) => ({
+  era,
+  label: ERA_LABEL[era],
+  items: entries.filter((e: any) => e.data.era === era),
+})).filter((g) => g.items.length > 0);
+
+const intro =
+  'Mithila has given India sages and logicians, poets and painters, statesmen and singers — from Yajnavalkya in King Janaka’s court to Vidyapati, from Karpoori Thakur to Sharda Sinha. A selection, grouped by era.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="people">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+    {
+      byEra.map((g) => (
+        <section class="era">
+          <h2 class="era-title accent-underline">{g.label}</h2>
+          <ul class="card-grid" role="list">
+            {g.items.map((e: any) => (
+              <li>
+                <EntryCard
+                  href={localizedPath(lang, `/people/${e.data.slug}/`)}
+                  title={e.data.title}
+                  summary={e.data.summary}
+                  cover={e.data.cover}
+                  tag={e.data.domains?.[0]}
+                  icon="person"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .era {
+    margin-top: 2.5rem;
+  }
+  .era-title {
+    font-size: 1.4rem;
+    margin: 0 0 1.25rem;
+  }
+</style>

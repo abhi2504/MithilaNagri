@@ -1,0 +1,518 @@
+---
+// Interactive day-by-day / stage-by-stage journey for a ritual.
+// Tabs across the top; clicking one reveals that stage's image + detail.
+import type { RitualStage } from '../../data/ritual-stages';
+interface Props {
+  stages: RitualStage[];
+  slug: string;
+  heading?: string;
+  accent?: string;
+  coverSrc?: string;
+}
+const { stages, slug, heading = 'The ritual, stage by stage', accent = '#c8341e', coverSrc } = Astro.props;
+const stepCount = stages.filter((s) => !s.context).length;
+let stepNo = 0;
+const items = stages.map((s) => ({ s, n: s.context ? 0 : ++stepNo }));
+const md = (t = '') =>
+  t.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+// body may hold several paragraphs separated by a blank line
+const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p.trim())}</p>`).join('');
+---
+<section class="rs" style={`--rs-accent:${accent}`} aria-label={heading}>
+  <h2 class="rs-heading">{heading}</h2>
+  <p class="rs-hint">Tap a stage for its rite, symbols and illustration — and the “Background” tabs for the history and meaning.</p>
+
+  <div class="rs-tabs" role="tablist">
+    {items.map(({ s, n }, i) => (
+      <button
+        class={`rs-tab${i === 0 ? ' is-active' : ''}${s.context ? ' is-context' : ''}`}
+        role="tab"
+        type="button"
+        id={`tab-${slug}-${s.key}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        aria-controls={`panel-${slug}-${s.key}`}
+        data-rs-index={i}
+      >
+        <span class="rs-tab-num">{s.context ? 'i' : n}</span>
+        <span class="rs-tab-label">{s.label}</span>
+      </button>
+    ))}
+  </div>
+
+  <div class="rs-panels">
+    {items.map(({ s, n }, i) => (
+      <article
+        class={`rs-panel${i === 0 ? ' is-active' : ''}`}
+        role="tabpanel"
+        id={`panel-${slug}-${s.key}`}
+        aria-labelledby={`tab-${slug}-${s.key}`}
+        data-rs-panel={i}
+        hidden={i !== 0}
+      >
+        <figure class="rs-fig" data-step={n || 'i'}>
+          <img
+            src={s.context && coverSrc ? coverSrc : `/img/stage-${slug}-${s.key}.jpg`}
+            alt={`${s.title} — illustration in the Mithila style`}
+            loading="lazy"
+            onerror="this.closest('.rs-fig').classList.add('noimg'); this.remove();"
+          />
+        </figure>
+        <div class="rs-body">
+          <p class="rs-step">{s.context ? 'Background' : `Stage ${n} of ${stepCount}`} · {s.label}</p>
+          <h3 class="rs-title">{s.title}</h3>
+          <div class="rs-prose" set:html={paras(s.body)} />
+
+          {s.vidhi && s.vidhi.length > 0 && (
+            <div class="rs-vidhi">
+              <p class="rs-subhead">विधि · The rite, step by step</p>
+              <ol class="rs-steps">
+                {s.vidhi.map((step) => <li set:html={md(step)} />)}
+              </ol>
+            </div>
+          )}
+
+          {s.mantra && (
+            <blockquote class="rs-mantra">
+              <span class="rs-mantra-tag">मन्त्र · mantra</span>
+              <p class="rs-mantra-sk">{s.mantra.sanskrit}</p>
+              <p class="rs-mantra-tr">{s.mantra.translit}</p>
+              <p class="rs-mantra-me">{s.mantra.meaning}</p>
+            </blockquote>
+          )}
+
+          {s.songs && s.songs.length > 0 && (
+            <div class="rs-songs">
+              <p class="rs-subhead">गीत · Songs of this moment</p>
+              <ul class="rs-songlist">
+                {s.songs.map((song) => (
+                  <li><span class="rs-song-name">{song.name}</span><span class="rs-song-note" set:html={md(song.note)} /></li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {s.variation && (
+            <p class="rs-variation"><span class="rs-var-tag">Across communities</span> <span set:html={md(s.variation)} /></p>
+          )}
+
+          {s.objects && (
+            <div class="rs-chipgroup">
+              <p class="rs-chiplabel">What is used</p>
+              <p class="rs-symbols">
+                {s.objects.split('·').map((sym) => sym.trim() && <span class="rs-chip">{sym.trim()}</span>)}
+              </p>
+            </div>
+          )}
+
+          {s.symbols && (
+            <div class="rs-chipgroup">
+              <p class="rs-chiplabel">{s.objects ? 'Meaning' : 'In this stage'}</p>
+              <p class="rs-symbols">
+                {s.symbols.split('·').map((sym) => sym.trim() && <span class="rs-chip">{sym.trim()}</span>)}
+              </p>
+            </div>
+          )}
+        </div>
+      </article>
+    ))}
+  </div>
+
+  <div class="rs-nav">
+    <button class="rs-arrow" type="button" data-rs-prev aria-label="Previous stage">‹ Prev</button>
+    <span class="rs-dots" aria-hidden="true">
+      {stages.map((_, i) => <span class={`rs-dot${i === 0 ? ' is-active' : ''}`} data-rs-dot={i}></span>)}
+    </span>
+    <button class="rs-arrow" type="button" data-rs-next aria-label="Next stage">Next ›</button>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.rs').forEach((rs) => {
+    const tabs = Array.from(rs.querySelectorAll<HTMLButtonElement>('.rs-tab'));
+    const panels = Array.from(rs.querySelectorAll<HTMLElement>('.rs-panel'));
+    const dots = Array.from(rs.querySelectorAll<HTMLElement>('.rs-dot'));
+    let cur = 0;
+    const show = (n: number) => {
+      cur = (n + panels.length) % panels.length;
+      tabs.forEach((t, i) => { t.classList.toggle('is-active', i === cur); t.setAttribute('aria-selected', i === cur ? 'true' : 'false'); });
+      panels.forEach((p, i) => { p.classList.toggle('is-active', i === cur); p.hidden = i !== cur; });
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === cur));
+    };
+    tabs.forEach((t, i) => t.addEventListener('click', () => show(i)));
+    rs.querySelector('[data-rs-prev]')?.addEventListener('click', () => show(cur - 1));
+    rs.querySelector('[data-rs-next]')?.addEventListener('click', () => show(cur + 1));
+  });
+</script>
+
+<style>
+  .rs {
+    margin: 1rem 0 1.5rem;
+    padding: 1.75rem clamp(1rem, 3vw, 2rem) 2rem;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--rs-accent) 7%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--rs-accent) 20%, var(--line));
+    --rs-accent: #c8341e;
+  }
+  .rs-heading {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    margin: 0 0 0.2rem;
+    color: var(--fg);
+  }
+  .rs-heading::after {
+    content: '';
+    display: block;
+    width: 64px;
+    height: 3px;
+    margin-top: 0.5rem;
+    background: var(--rs-accent);
+    border-radius: 2px;
+  }
+  .rs-hint {
+    margin: 0 0 1.1rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  /* TABS */
+  .rs-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.2rem;
+  }
+  .rs-tab {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--rs-accent) 35%, var(--line));
+    background: var(--surface);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  }
+  .rs-tab:hover {
+    border-color: var(--rs-accent);
+  }
+  .rs-tab.is-active {
+    background: var(--rs-accent);
+    border-color: var(--rs-accent);
+    color: #fff;
+  }
+  .rs-tab-num {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--rs-accent) 22%, transparent);
+    color: var(--rs-accent);
+    font-size: 0.72rem;
+  }
+  .rs-tab.is-active .rs-tab-num {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+  }
+  .rs-tab.is-context {
+    border-style: dashed;
+    font-style: italic;
+  }
+  .rs-tab.is-context .rs-tab-num {
+    font-style: normal;
+  }
+
+  /* PANELS */
+  .rs-panels {
+    margin-top: 1rem;
+  }
+  .rs-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 2.4rem;
+    align-items: start;
+    animation: rsIn 0.35s ease;
+  }
+  .rs-panel[hidden] { display: none; }
+  @keyframes rsIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .rs-fig {
+    margin: 0;
+    min-width: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px double color-mix(in srgb, var(--rs-accent) 45%, var(--line));
+    background: color-mix(in srgb, var(--rs-accent) 12%, var(--surface));
+    position: sticky;
+    top: 84px;
+    height: clamp(300px, 44vh, 460px);
+  }
+  .rs-fig img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* graceful fallback when a stage image hasn't been generated */
+  .rs-fig.noimg::before {
+    content: 'स्टेज ' attr(data-step);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    color: color-mix(in srgb, var(--rs-accent) 60%, var(--fg));
+    background:
+      radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--rs-accent) 22%, var(--surface)), var(--surface));
+    opacity: 0.85;
+  }
+  .rs-body {
+    align-self: start;
+  }
+  .rs-step {
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rs-accent);
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+  }
+  .rs-title {
+    font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+    margin: 0 0 0.7rem;
+    color: var(--fg);
+  }
+  .rs-text {
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: var(--fg);
+    margin: 0 0 0.85rem;
+  }
+  .rs-prose { margin-bottom: 0.4rem; }
+
+  /* SUB-HEADINGS for the rich blocks */
+  .rs-subhead {
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--rs-accent);
+    margin: 1.1rem 0 0.5rem;
+  }
+
+  /* VIDHI — numbered steps */
+  .rs-vidhi { margin: 0 0 0.4rem; }
+  .rs-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: rsstep;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .rs-steps li {
+    counter-increment: rsstep;
+    position: relative;
+    padding-left: 2.1rem;
+    font-size: 0.96rem;
+    line-height: 1.6;
+    color: var(--fg);
+  }
+  .rs-steps li::before {
+    content: counter(rsstep);
+    position: absolute;
+    left: 0;
+    top: 0.05rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--rs-accent) 16%, var(--surface));
+    border: 1.5px solid color-mix(in srgb, var(--rs-accent) 40%, transparent);
+    color: var(--rs-accent);
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  /* SONGS */
+  .rs-songs { margin: 0 0 0.4rem; }
+  .rs-songlist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .rs-songlist li {
+    padding: 0.55rem 0.8rem;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--rs-accent) 6%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--rs-accent) 16%, var(--line));
+    border-left: 3px solid color-mix(in srgb, var(--rs-accent) 55%, var(--line));
+  }
+  .rs-song-name {
+    display: block;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--fg);
+    margin-bottom: 0.1rem;
+  }
+  .rs-song-note {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  /* VARIATION */
+  .rs-variation {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--fg);
+    margin: 1rem 0 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--fg) 4%, var(--surface));
+    border: 1px dashed color-mix(in srgb, var(--rs-accent) 30%, var(--line));
+  }
+  .rs-var-tag {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--rs-accent);
+    margin-right: 0.4rem;
+  }
+
+  /* CHIP GROUPS */
+  .rs-chipgroup { margin-top: 0.8rem; }
+  .rs-chiplabel {
+    font-family: var(--font-ui);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 0 0 0.35rem;
+  }
+
+  /* MANTRA */
+  .rs-mantra {
+    margin: 0 0 1rem;
+    padding: 0.9rem 1.1rem;
+    border-left: 4px solid var(--rs-accent);
+    border-radius: 0 10px 10px 0;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--rs-accent) 14%, var(--surface)), color-mix(in srgb, var(--rs-accent) 7%, var(--surface)));
+  }
+  .rs-mantra-tag {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rs-accent);
+    font-weight: 700;
+    margin-bottom: 0.45rem;
+  }
+  .rs-mantra-sk {
+    font-family: 'Tiro Devanagari Hindi', var(--font-display), 'Noto Serif Devanagari', serif;
+    font-size: 1.18rem;
+    line-height: 1.85;
+    white-space: pre-line;
+    color: var(--fg);
+    margin: 0 0 0.5rem;
+  }
+  .rs-mantra-tr {
+    font-style: italic;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+  .rs-mantra-me {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--fg);
+    margin: 0;
+  }
+
+  .rs-symbols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+  }
+  .rs-chip {
+    font-family: var(--font-ui);
+    font-size: 0.76rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--rs-accent) 13%, var(--surface));
+    color: color-mix(in srgb, var(--rs-accent) 75%, var(--fg));
+    border: 1px solid color-mix(in srgb, var(--rs-accent) 28%, transparent);
+  }
+
+  /* NAV */
+  .rs-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.3rem;
+  }
+  .rs-arrow {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .rs-arrow:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+  }
+  .rs-dots {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .rs-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: background 0.16s, transform 0.16s;
+  }
+  .rs-dot.is-active {
+    background: var(--rs-accent);
+    transform: scale(1.35);
+  }
+
+  @media (max-width: 760px) {
+    .rs-panel {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

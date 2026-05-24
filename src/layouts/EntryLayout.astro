@@ -1,0 +1,187 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import SectionHero from '../components/content/SectionHero.astro';
+import CreditedImage from '../components/media/CreditedImage.astro';
+import Gallery from '../components/media/Gallery.astro';
+import { getSection } from '../lib/constants';
+import { localizedPath, useTranslations } from '../i18n/utils';
+import type { Locale } from '../i18n/locales';
+
+interface Fact {
+  label: string;
+  value: string;
+}
+interface Source {
+  label: string;
+  url: string;
+}
+interface Props {
+  lang: Locale;
+  section: string;
+  title: string;
+  summary?: string;
+  cover?: string;
+  gallery?: string[];
+  facts?: Fact[];
+  sources?: Source[];
+}
+const {
+  lang,
+  section,
+  title,
+  summary,
+  cover,
+  gallery = [],
+  facts = [],
+  sources = [],
+} = Astro.props;
+const s = getSection(section)!;
+const t = useTranslations(lang);
+const sectionHref = localizedPath(lang, `/${section}/`);
+---
+<BaseLayout title={title} description={summary} accent={s.accent} section={section}>
+  <SectionHero
+    lang={lang}
+    title={title}
+    blurb={summary}
+    icon={s.icon}
+    crumbs={[{ label: s.labels[lang], href: sectionHref }, { label: title }]}
+  />
+
+  {
+    Astro.slots.has('feature') && (
+      <div class="entry-feature container-wide">
+        <slot name="feature" />
+      </div>
+    )
+  }
+
+  <div class="container-wide entry-grid" data-pagefind-body>
+    <article class="entry-body">
+      {cover && <CreditedImage id={cover} class="entry-cover kohbar-frame" />}
+      <div class="prose">
+        <slot />
+      </div>
+
+      {
+        gallery.length > 0 && (
+          <section class="block">
+            <h2 class="block-title accent-underline">Gallery</h2>
+            <Gallery ids={gallery} />
+          </section>
+        )
+      }
+
+      {
+        sources.length > 0 && (
+          <section class="block">
+            <h2 class="block-title accent-underline">{t('common.sources')}</h2>
+            <ul class="sources">
+              {sources.map((src) => (
+                <li>
+                  <a href={src.url} target="_blank" rel="noopener noreferrer">
+                    {src.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+    </article>
+
+    <aside class="entry-aside">
+      {
+        facts.length > 0 && (
+          <div class="fact-card kohbar-frame" data-pagefind-ignore>
+            <dl>
+              {facts.map((f) => (
+                <Fragment>
+                  <dt>{f.label}</dt>
+                  <dd>{f.value}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          </div>
+        )
+      }
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  .entry-feature {
+    padding-block: 2rem 0.5rem;
+  }
+  .entry-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 2.5rem;
+    padding-block: 2.5rem 1rem;
+    align-items: start;
+  }
+  .entry-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 1.75rem;
+  }
+  .block {
+    margin-top: 2.5rem;
+  }
+  .block-title {
+    font-size: 1.4rem;
+    margin: 0 0 1.1rem;
+  }
+  .sources {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .sources a {
+    color: var(--link);
+    text-decoration: underline;
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+  }
+  .entry-aside {
+    position: sticky;
+    top: 80px;
+  }
+  .fact-card {
+    background: var(--surface);
+    padding: 1.25rem 1.4rem;
+  }
+  .fact-card dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .fact-card dt {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-top: 0.75rem;
+  }
+  .fact-card dt:first-child {
+    margin-top: 0;
+  }
+  .fact-card dd {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  @media (max-width: 900px) {
+    .entry-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .entry-aside {
+      position: static;
+      order: -1;
+    }
+  }
+</style>

@@ -1,0 +1,40 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import { render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getEntryKeys, getLocalizedEntry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const slugs = await getEntryKeys('villages');
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('villages', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+const where = [d.district, d.state, d.country === 'NP' ? 'Nepal' : 'India'].filter(Boolean).join(', ');
+const facts: any[] = [
+  d.famousFor && { label: 'Famous for', value: d.famousFor },
+  where && { label: 'Where', value: where },
+  d.block && { label: 'Block', value: d.block },
+  d.panchayat && { label: 'Panchayat', value: d.panchayat },
+  d.sarpanch && { label: 'Sarpanch', value: d.sarpanch },
+  d.nearestRail && { label: 'Nearest rail', value: d.nearestRail },
+  d.rivers?.length && { label: 'Rivers', value: d.rivers.join(', ') },
+  typeof d.lat === 'number' && { label: 'Coordinates', value: `${d.lat.toFixed(3)}, ${d.lng.toFixed(3)}` },
+].filter(Boolean);
+---
+<EntryLayout
+  lang={lang}
+  section="villages"
+  title={d.nameNative ? `${d.title} · ${d.nameNative}` : d.title}
+  summary={d.famousFor}
+  cover={d.cover}
+  gallery={d.gallery}
+  facts={facts}
+  sources={d.sources}
+>
+  <Content />
+</EntryLayout>

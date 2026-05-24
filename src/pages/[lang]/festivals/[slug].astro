@@ -1,0 +1,52 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import RitualStages from '../../../components/content/RitualStages.astro';
+import { render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getEntryKeys, getLocalizedEntry } from '../../../lib/content';
+import { getSection } from '../../../lib/constants';
+import { getMedia } from '../../../lib/media';
+import { FESTIVAL_STAGES, FESTIVAL_CONTEXT } from '../../../data/festival-stages';
+
+export async function getStaticPaths() {
+  const slugs = await getEntryKeys('festivals');
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('festivals', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+const stages = [...(FESTIVAL_STAGES[slug] ?? []), ...(FESTIVAL_CONTEXT[slug] ?? [])];
+const coverSrc = d.cover ? getMedia(d.cover).src : undefined;
+const accent = getSection('festivals')?.accent ?? '#c8341e';
+// Most journeys read as "day by day"; a few are scene/phase sequences, not days.
+const HEADINGS: Record<string, string> = {
+  'vivaha-panchami': 'The Ram–Sita wedding — scene by scene',
+  'durga-puja': 'Durga Puja — the nine nights & the tenth',
+  'kojagara': 'Kojagara — the son-in-law’s full-moon night',
+  'sama-chakeva': 'Sama-Chakeva — the clay birds, night by night',
+};
+const heading = HEADINGS[slug] ?? `${d.title} — day by day`;
+const facts: any[] = [
+  d.gregorian && { label: 'When', value: d.gregorian },
+  d.hinduMonth && { label: 'Hindu month', value: d.hinduMonth },
+  d.durationDays && { label: 'Duration', value: `${d.durationDays} days` },
+  d.deities?.length && { label: 'Deities', value: d.deities.join(', ') },
+  d.uniqueToMithila && { label: 'Note', value: 'Distinctive to Mithila' },
+].filter(Boolean);
+---
+<EntryLayout
+  lang={lang}
+  section="festivals"
+  title={d.title}
+  summary={d.summary}
+  cover={stages.length > 0 ? undefined : d.cover}
+  gallery={stages.length > 0 ? [] : d.gallery}
+  facts={facts}
+  sources={d.sources}
+>
+  {stages.length > 0 && <RitualStages slot="feature" stages={stages} slug={slug} heading={heading} accent={accent} coverSrc={coverSrc} />}
+  {stages.length === 0 && <Content />}
+</EntryLayout>

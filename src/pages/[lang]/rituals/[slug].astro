@@ -1,0 +1,46 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import RitualStages from '../../../components/content/RitualStages.astro';
+import { getCollection, render } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getLocalizedEntry } from '../../../lib/content';
+import { getSection } from '../../../lib/constants';
+import { getMedia } from '../../../lib/media';
+import { RITUAL_STAGES, RITUAL_CONTEXT } from '../../../data/ritual-stages';
+
+export async function getStaticPaths() {
+  const all = await getCollection('articles');
+  const slugs = [...new Set(all.filter((e: any) => e.data.section === 'rituals').map((e: any) => e.data.slug))];
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('articles', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const stages = [...(RITUAL_STAGES[slug] ?? []), ...(RITUAL_CONTEXT[slug] ?? [])];
+const { Content } = await render(entry);
+const coverSrc = d.cover ? getMedia(d.cover).src : undefined;
+const accent = getSection('rituals')?.accent ?? '#c8341e';
+const HEADINGS: Record<string, string> = {
+  'upanayan': 'The Upanayan — day by day',
+  'maithil-vivah': 'The wedding — stage by stage',
+  'sohar-chhathi': 'Welcoming a child — step by step',
+  'mundan': 'The Mundan — step by step',
+  'shradh': 'The last rites — stage by stage',
+  'panji-system': 'The Panji — stage by stage',
+  'kohbar-ghar': 'The Kohbar — aspect by aspect',
+};
+---
+<EntryLayout
+  lang={lang}
+  section="rituals"
+  title={d.title}
+  summary={d.summary}
+  cover={stages.length > 0 ? undefined : d.cover}
+  gallery={stages.length > 0 ? [] : d.gallery}
+  sources={d.sources}
+>
+  {stages.length > 0 && <RitualStages slot="feature" stages={stages} slug={slug} heading={HEADINGS[slug] ?? 'The ritual, stage by stage'} accent={accent} coverSrc={coverSrc} />}
+  {stages.length === 0 && <Content />}
+</EntryLayout>

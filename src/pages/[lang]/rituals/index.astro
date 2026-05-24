@@ -1,0 +1,238 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('rituals')!;
+const accent = s.accent;
+const entries = (await getLocalizedEntries('articles', lang)).filter(
+  (e: any) => e.data.section === 'rituals'
+);
+const bySlug: Record<string, any> = Object.fromEntries(entries.map((e: any) => [e.data.slug, e]));
+
+// The saṃskāras — the journey of a life, in order
+const STAGES = [
+  { slug: 'sohar-chhathi', label: 'Birth', dev: 'जन्म', note: 'Sohar & Chhathi' },
+  { slug: 'mundan', label: 'Mundan', dev: 'मुण्डन', note: 'the first tonsure' },
+  { slug: 'upanayan', label: 'Upanayan', dev: 'उपनयन', note: 'the sacred thread' },
+  { slug: 'maithil-vivah', label: 'Marriage', dev: 'विवाह', note: 'Maithil Vivah' },
+  { slug: 'shradh', label: 'Death', dev: 'अन्त्येष्टि', note: 'last rites & Shraddha' },
+];
+// The two institutions that orbit the wedding
+const AROUND = ['panji-system', 'kohbar-ghar'];
+
+const lifeCards = STAGES.map((st) => bySlug[st.slug]).filter(Boolean);
+const aroundCards = AROUND.map((slug) => bySlug[slug]).filter(Boolean);
+const intro =
+  'Maithil life is marked from cradle to pyre by saṃskāra — the rites of passage. Follow the journey of a life: a child welcomed with birth-songs, shorn at the Mundan, girded with the sacred thread, married in the painted Kohbar, and at the last returned to the river.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={accent} section="rituals">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body style={`--accent:${accent}`}>
+    <p class="hub-intro">{intro}</p>
+
+    <!-- The life-path: birth → death -->
+    <section class="lifepath" aria-label="The journey of a life">
+      <p class="lifepath-kicker">जीवन · the journey of a life</p>
+      <ol class="lifepath-track" role="list">
+        {STAGES.map((st, i) => (
+          <li class="lp-node">
+            <a class="lp-link" href={localizedPath(lang, `/rituals/${st.slug}/`)}>
+              <span class="lp-num">{i + 1}</span>
+              <span class="lp-dev">{st.dev}</span>
+              <span class="lp-label">{st.label}</span>
+              <span class="lp-note">{st.note}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- The saṃskāra entries, in life order -->
+    <h2 class="hub-group">The saṃskāras — a life in rites</h2>
+    <ul class="card-grid" role="list">
+      {lifeCards.map((e: any) => (
+        <li>
+          <EntryCard
+            href={localizedPath(lang, `/rituals/${e.data.slug}/`)}
+            title={e.data.title}
+            summary={e.data.summary}
+            cover={e.data.cover}
+            icon="kohbar"
+          />
+        </li>
+      ))}
+    </ul>
+
+    <!-- The two institutions around the wedding -->
+    <h2 class="hub-group">Around the wedding</h2>
+    <p class="hub-group-note">Two institutions orbit the Maithil marriage: the centuries-old genealogy that decides who may wed, and the painted chamber in which the union is sealed.</p>
+    <ul class="card-grid" role="list">
+      {aroundCards.map((e: any) => (
+        <li>
+          <EntryCard
+            href={localizedPath(lang, `/rituals/${e.data.slug}/`)}
+            title={e.data.title}
+            summary={e.data.summary}
+            cover={e.data.cover}
+            icon="kohbar"
+          />
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .hub-group {
+    font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+    margin: 2.4rem 0 0.3rem;
+    color: var(--fg);
+  }
+  .hub-group::after {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin-top: 0.5rem;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .hub-group-note {
+    margin: 0 0 1.1rem;
+    max-width: 52ch;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* ── LIFE-PATH RIBBON ───────────────────────────── */
+  .lifepath {
+    margin: 1.5rem 0 0.5rem;
+    padding: 1.6rem clamp(1rem, 3vw, 2.4rem) 1.9rem;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  }
+  .lifepath-kicker {
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0 0 1.2rem;
+    text-align: center;
+  }
+  .lifepath-track {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    position: relative;
+  }
+  /* the connecting life-line behind the number nodes */
+  .lifepath-track::before {
+    content: '';
+    position: absolute;
+    top: 19px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: color-mix(in srgb, var(--accent) 35%, var(--line));
+    z-index: 0;
+  }
+  .lp-node {
+    flex: 1 1 0;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .lp-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.18rem;
+    text-decoration: none;
+    color: var(--fg);
+    padding: 0 0.2rem;
+  }
+  .lp-num {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+    color: var(--accent);
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.45rem;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+  .lp-dev {
+    font-family: 'Tiro Devanagari Hindi', var(--font-display), serif;
+    font-size: 1.05rem;
+    color: color-mix(in srgb, var(--accent) 80%, var(--fg));
+    line-height: 1.1;
+  }
+  .lp-label {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--fg);
+  }
+  .lp-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  .lp-link:hover .lp-num {
+    background: var(--accent);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+  .lp-link:hover .lp-label {
+    color: var(--accent);
+  }
+
+  @media (max-width: 680px) {
+    /* vertical timeline on small screens */
+    .lifepath-track {
+      flex-direction: column;
+      gap: 0.2rem;
+      padding-left: 0.5rem;
+    }
+    .lifepath-track::before {
+      top: 8px;
+      bottom: 8px;
+      left: 20px;
+      right: auto;
+      width: 2px;
+      height: auto;
+    }
+    .lp-node { flex: none; }
+    .lp-link {
+      flex-direction: row;
+      align-items: center;
+      text-align: left;
+      gap: 0.8rem;
+      padding: 0.5rem 0;
+    }
+    .lp-num { margin-bottom: 0; flex: 0 0 auto; }
+    .lp-dev { display: none; }
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+import Icon from '../Icon.astro';
+import { localizedPath } from '../../i18n/utils';
+import type { Locale } from '../../i18n/locales';
+
+interface Props {
+  lang: Locale;
+  title: string;
+  blurb?: string;
+  icon?: string;
+  /** Breadcrumb trail: array of {label, href?}. Last item is current. */
+  crumbs?: Array<{ label: string; href?: string }>;
+}
+const { lang, title, blurb, icon = 'lotus', crumbs = [] } = Astro.props;
+---
+<section class="section-hero kohbar-bg">
+  <div class="container-wide">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href={localizedPath(lang, '/')}>Mithila</a>
+      {
+        crumbs.map((c) => (
+          <>
+            <span aria-hidden="true">›</span>
+            {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+          </>
+        ))
+      }
+    </nav>
+    <div class="head">
+      <span class="hero-icon" aria-hidden="true"><Icon name={icon} size={40} /></span>
+      <div>
+        <h1 class="accent-underline">{title}</h1>
+        {blurb && <p>{blurb}</p>}
+      </div>
+    </div>
+  </div>
+  <div class="divider-fish" aria-hidden="true"></div>
+</section>
+
+<style>
+  .section-hero {
+    background-color: color-mix(in srgb, var(--accent) 13%, var(--bg));
+    padding-top: 1.25rem;
+  }
+  .crumbs {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .head {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding-bottom: 1.5rem;
+  }
+  .hero-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+  }
+  .head h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0;
+  }
+  .head p {
+    margin: 0.9rem 0 0;
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 48rem;
+    line-height: 1.5;
+  }
+</style>

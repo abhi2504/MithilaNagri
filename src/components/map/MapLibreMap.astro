@@ -1,0 +1,113 @@
+---
+// Interactive India–Nepal map of Mithila (MapLibre GL JS, free OpenFreeMap basemap).
+interface Point {
+  lng: number;
+  lat: number;
+  title: string;
+  type?: string;
+  href?: string;
+}
+interface Props {
+  points?: Point[];
+  height?: string;
+  center?: [number, number];
+  zoom?: number;
+  class?: string;
+}
+const {
+  points = [],
+  height = '440px',
+  center = [86.1, 26.55],
+  zoom = 6.4,
+  class: className = '',
+} = Astro.props;
+---
+<div class:list={['map-wrap', className]} style={`height:${height}`} data-pagefind-ignore>
+  <div
+    class="maplibre-map"
+    data-points={JSON.stringify(points)}
+    data-center={JSON.stringify(center)}
+    data-zoom={String(zoom)}
+  >
+  </div>
+  <noscript>
+    <div class="map-fallback">The interactive map needs JavaScript enabled.</div>
+  </noscript>
+</div>
+
+<style>
+  .map-wrap {
+    position: relative;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--alt);
+  }
+  .maplibre-map {
+    width: 100%;
+    height: 100%;
+  }
+  .map-fallback {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    color: var(--muted);
+    font-family: var(--font-ui);
+  }
+  :global(.maplibregl-popup-content) {
+    font-family: var(--font-ui);
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+  :global(.mlg-pop h3) {
+    margin: 0 0 2px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: #1b1714;
+  }
+  :global(.mlg-pop a) {
+    color: #c8341e;
+    font-size: 0.8rem;
+  }
+</style>
+
+<script>
+  import maplibregl from 'maplibre-gl';
+  import 'maplibre-gl/dist/maplibre-gl.css';
+
+  const TYPE_COLORS: Record<string, string> = {
+    temple: '#c8341e',
+    palace: '#2e4374',
+    museum: '#7a4fa0',
+    heritage: '#a02817',
+    ghat: '#2e7d8a',
+    natural: '#3e7c4f',
+    circuit: '#e0a82e',
+    venue: '#d86b7e',
+    village: '#3e7c4f',
+  };
+
+  document.querySelectorAll<HTMLElement>('.maplibre-map').forEach((node) => {
+    const points: any[] = JSON.parse(node.dataset.points || '[]');
+    const center = JSON.parse(node.dataset.center || '[86.1,26.55]');
+    const zoom = parseFloat(node.dataset.zoom || '6.4');
+
+    const map = new maplibregl.Map({
+      container: node,
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center,
+      zoom,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+    for (const p of points) {
+      const color = TYPE_COLORS[p.type as string] || '#c8341e';
+      const popup = new maplibregl.Popup({ offset: 24 }).setHTML(
+        `<div class="mlg-pop"><h3>${p.title}</h3>${
+          p.href ? `<a href="${p.href}">Read more &rarr;</a>` : ''
+        }</div>`
+      );
+      new maplibregl.Marker({ color }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(map);
+    }
+  });
+</script>

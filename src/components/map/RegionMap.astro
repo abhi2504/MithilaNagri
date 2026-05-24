@@ -1,0 +1,188 @@
+---
+// A self-contained, offline-friendly schematic map of the Mithila region.
+// Pins are placed from real lat/lng; rivers and the India–Nepal divide are
+// stylised. No remote tiles, so it always renders.
+interface Point {
+  lng: number;
+  lat: number;
+  title: string;
+  type?: string;
+  href?: string;
+}
+interface Props {
+  points?: Point[];
+  class?: string;
+}
+const { points = [], class: className = '' } = Astro.props;
+
+const LNG0 = 84.0,
+  LNG1 = 87.8,
+  LAT0 = 25.2,
+  LAT1 = 27.5,
+  W = 760,
+  H = 460;
+const proj = (lng: number, lat: number): [number, number] => [
+  ((lng - LNG0) / (LNG1 - LNG0)) * W,
+  ((LAT1 - lat) / (LAT1 - LAT0)) * H,
+];
+
+const TYPE_COLORS: Record<string, string> = {
+  temple: '#c8341e',
+  palace: '#2e4374',
+  museum: '#7a4fa0',
+  heritage: '#a02817',
+  ghat: '#2e7d8a',
+  natural: '#3e7c4f',
+  circuit: '#e0a82e',
+  venue: '#d86b7e',
+  village: '#3e7c4f',
+};
+const TYPE_LABEL: Record<string, string> = {
+  temple: 'Temple',
+  palace: 'Palace',
+  museum: 'Museum',
+  heritage: 'Heritage',
+  ghat: 'Ghat',
+  natural: 'Natural',
+  circuit: 'Circuit',
+  venue: 'Venue',
+  village: 'Village',
+};
+
+const pins = points
+  .filter((p) => typeof p.lng === 'number' && typeof p.lat === 'number')
+  .map((p) => {
+    const [x, y] = proj(p.lng, p.lat);
+    return { ...p, x, y, color: TYPE_COLORS[p.type ?? ''] ?? '#c8341e' };
+  });
+const typesPresent = [...new Set(pins.map((p) => p.type ?? 'temple'))];
+---
+<figure class:list={['region-map', className]} data-pagefind-ignore>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Schematic map of the Mithila region across India and Nepal" preserveAspectRatio="xMidYMid meet">
+    <!-- land -->
+    <rect x="0" y="0" width={W} height={H} fill="#efe3c8" />
+    <!-- Himalayan foothills band (north) -->
+    <path d="M0,70 Q190,40 380,68 T760,60 L760,0 L0,0 Z" fill="#e3d3ad" />
+    <!-- Ganga band (south) -->
+    <path d="M0,400 Q200,430 400,408 T760,418 L760,460 L0,460 Z" fill="#dcdcc0" />
+
+    <!-- rivers (stylised) -->
+    <g class="rivers" fill="none" stroke="#3f6f86" stroke-width="2.4" opacity="0.55">
+      <path d="M120,60 C150,160 90,250 140,420" />
+      <path d="M320,62 C350,170 300,270 360,420" />
+      <path d="M392,64 C420,180 380,300 430,422" />
+      <path d="M580,58 C610,170 540,290 600,420" />
+    </g>
+    <g class="river-labels" fill="#3f6f86" font-size="11" opacity="0.8">
+      <text x="126" y="120">Gandak</text>
+      <text x="300" y="120">Bagmati</text>
+      <text x="398" y="120">Kamala</text>
+      <text x="556" y="116">Kosi</text>
+    </g>
+
+    <!-- India–Nepal divide -->
+    <path d="M0,150 Q200,120 400,150 T760,140" fill="none" stroke="#8a7a55" stroke-width="1.5" stroke-dasharray="6 5" />
+    <text x="20" y="120" fill="#6f5d3a" font-size="12" letter-spacing="2">NEPAL</text>
+    <text x="20" y="185" fill="#6f5d3a" font-size="12" letter-spacing="2">INDIA</text>
+
+    <!-- pins -->
+    {
+      pins.map((p) => (
+        <a href={p.href} class="rm-pin">
+          <circle cx={p.x} cy={p.y} r="5.5" fill={p.color} stroke="#fff" stroke-width="1.4" />
+          <title>{p.title}</title>
+          <text x={p.x + 9} y={p.y + 4} class="rm-label">{p.title}</text>
+        </a>
+      ))
+    }
+  </svg>
+
+  <ul class="rm-legend" role="list">
+    {
+      typesPresent.map((t) => (
+        <li>
+          <span class="dot" style={`background:${TYPE_COLORS[t] ?? '#c8341e'}`} />
+          {TYPE_LABEL[t] ?? t}
+        </li>
+      ))
+    }
+  </ul>
+  <figcaption>Schematic map — hover a marker for its name, click to open.</figcaption>
+</figure>
+
+<style>
+  .region-map {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: #efe3c8;
+  }
+  .region-map svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .rm-pin {
+    cursor: pointer;
+  }
+  .rm-pin circle {
+    transition: r 0.12s ease;
+  }
+  .rm-pin:hover circle,
+  .rm-pin:focus circle {
+    r: 8;
+  }
+  .rm-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    fill: var(--color-ink);
+    paint-order: stroke;
+    stroke: #efe3c8;
+    stroke-width: 3px;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    pointer-events: none;
+  }
+  .rm-pin:hover .rm-label,
+  .rm-pin:focus .rm-label {
+    opacity: 1;
+  }
+  .rm-legend {
+    list-style: none;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .rm-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .rm-legend .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .region-map figcaption {
+    padding: 0.5rem 1rem 0.7rem;
+    background: var(--surface);
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rm-pin circle,
+    .rm-label {
+      transition: none;
+    }
+  }
+</style>

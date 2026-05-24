@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('living-culture')!;
+const entries = (await getLocalizedEntries('articles', lang)).filter(
+  (e: any) => e.data.section === 'living-culture'
+);
+const intro =
+  'Mithila’s culture is not only inherited but made anew — in a small, searching cinema, in folk song from Sohar to Chhath, in tales of Salhesh and Gonu Jha, and in a living movement for the recognition of Maithili identity.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="living-culture">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+    <ul class="card-grid" role="list">
+      {
+        entries.map((e: any) => (
+          <li>
+            <EntryCard
+              href={localizedPath(lang, `/living-culture/${e.data.slug}/`)}
+              title={e.data.title}
+              summary={e.data.summary}
+              cover={e.data.cover}
+              icon="peacock"
+            />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

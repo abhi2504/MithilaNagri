@@ -1,0 +1,22 @@
+# build output
+dist/
+# raw OSM working files
+.osmtmp/
+# astro
+.astro/
+# dependencies
+node_modules/
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# environment variables
+.env
+.env.production
+# macOS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+# pagefind output is generated into dist

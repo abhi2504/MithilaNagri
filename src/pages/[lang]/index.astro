@@ -1,0 +1,555 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import Gallery from '../../components/media/Gallery.astro';
+import EntryCard from '../../components/content/EntryCard.astro';
+import RegionMap from '../../components/map/RegionMap.astro';
+import { LOCALES, type Locale } from '../../i18n/locales';
+import { localizedPath, useTranslations } from '../../i18n/utils';
+import { NAV_ORDER, getSection } from '../../lib/constants';
+import { getMedia } from '../../lib/media';
+import { getLocalizedEntries } from '../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Locale;
+const t = useTranslations(lang);
+
+// Hero rotation — a rich pool of real images; JS shuffles + crossfades them.
+const heroIds = [
+  'hero-janaki', 'hero-chhath', 'hero-madhubani',
+  'place-ram-janakpur', 'place-kapileshwar', 'festival-holi',
+  'place-vaishali', 'art-madhubani-2', 'village-mahishi',
+];
+const heroImgs = heroIds.map((id) => getMedia(id));
+
+// Map points from places
+const places = await getLocalizedEntries('places', lang);
+const mapPoints = places
+  .filter((p: any) => typeof p.data.lat === 'number' && typeof p.data.lng === 'number')
+  .map((p: any) => ({
+    lng: p.data.lng,
+    lat: p.data.lat,
+    title: p.data.title,
+    type: p.data.placeType,
+    href: localizedPath(lang, `/places/${p.data.slug}/`),
+  }));
+
+// Pillars (exclude the Discover meta-section)
+const pillars = NAV_ORDER.filter((id) => id !== 'discover').map((id) => getSection(id)!);
+
+// Did you know — render the whole library; JS shows a random rotating 6.
+const facts = await getLocalizedEntries('didYouKnow', lang);
+
+// Featured people
+const people = (await getLocalizedEntries('personalities', lang)).filter(
+  (p: any) => p.data.featured
+);
+
+const galleryStrip = [
+  'hero-madhubani',
+  'art-madhubani-2',
+  'art-asha-jha',
+  'festival-chhath',
+  'festival-sama-chakeva',
+  'place-janaki',
+  'food-makhana-pond',
+  'person-vidyapati',
+];
+
+const stats = [
+  { n: '~17M', l: 'Maithili speakers' },
+  { n: '700+', l: 'years of Panji records' },
+  { n: '90%', l: "of India's makhana" },
+  { n: '2', l: 'nations, one culture' },
+];
+---
+<BaseLayout title="Mithila — Land of Sita" bareTitle={true} accent="#c8341e">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      {
+        heroImgs.map((m, i) => (
+          <img
+            src={m.src}
+            alt=""
+            class={`hero-img${i === 0 ? ' is-active' : ''}`}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchpriority={i === 0 ? 'high' : 'auto'}
+            onerror="this.onerror=null;this.src='/icons/placeholder.svg';"
+          />
+        ))
+      }
+      <div class="hero-scrim"></div>
+    </div>
+    <div class="divider-fish hero-top" style="--accent:#e0a82e"></div>
+    <div class="container-wide hero-inner">
+      <p class="hero-kicker font-tirhuta">𑒧𑒱𑒟𑒱𑒪𑒰</p>
+      <h1>Mithila</h1>
+      <p class="hero-tagline">{t('site.tagline')}</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href={localizedPath(lang, '/map/')}>{t('hero.cta.map')}</a>
+        <a class="btn btn-ghost" href="#explore">{t('hero.cta.journey')}</a>
+      </div>
+      <p class="hero-credit">Images: Wikimedia Commons — see <a href={localizedPath(lang, '/credits/')}>credits</a></p>
+    </div>
+    <div class="divider-lotus hero-bottom" style="--accent:#e0a82e"></div>
+  </section>
+
+  <!-- WHAT & WHERE -->
+  <section class="what container-wide">
+    <div class="what-text">
+      <h2 class="accent-underline">{t('home.what.title')}</h2>
+      <p>{t('home.what.body')}</p>
+      <ul class="stats" role="list">
+        {
+          stats.map((s) => (
+            <li>
+              <strong>{s.n}</strong>
+              <span>{s.l}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="what-map">
+      <RegionMap points={mapPoints} class="home-map" />
+      <a class="map-cta" href={localizedPath(lang, '/map/')}>Open the full interactive map →</a>
+    </div>
+  </section>
+
+  <!-- EXPLORE PILLARS -->
+  <section id="explore" class="explore container-wide">
+    <h2 class="section-title accent-underline">{t('home.explore.title')}</h2>
+    <ul class="pillars" role="list">
+      {
+        pillars.map((s) => (
+          <li>
+            <a class="pillar kohbar-frame" href={localizedPath(lang, `/${s.id}/`)} style={`--accent:${s.accent}`}>
+              <span class="pillar-icon" aria-hidden="true">
+                <Icon name={s.icon} size={30} />
+              </span>
+              <h3>{s.labels[lang]}</h3>
+              <p>{s.blurbs[lang]}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- GALLERY STRIP -->
+  <section class="gallery-band">
+    <div class="container-wide">
+      <h2 class="section-title accent-underline" style="--accent:#c8341e">{t('home.gallery.title')}</h2>
+      <Gallery ids={galleryStrip} />
+    </div>
+  </section>
+
+  <!-- DID YOU KNOW -->
+  <section class="dyk container-wide">
+    <h2 class="section-title accent-underline" style="--accent:#2e4374">{t('home.didyouknow.title')}</h2>
+    <ul class="dyk-grid" id="dyk-grid" role="list">
+      {
+        facts.map((f: any) => (
+          <li class="dyk-card kohbar-frame">
+            <span class="dyk-mark" aria-hidden="true"><Icon name="fish" size={20} /></span>
+            <p>{f.data.fact}</p>
+            {f.data.sourceUrl && (
+              <a href={f.data.sourceUrl} target="_blank" rel="noopener noreferrer">{t('common.source')}</a>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- PEOPLE -->
+  {
+    people.length > 0 && (
+      <section class="people container-wide">
+        <h2 class="section-title accent-underline" style="--accent:#e0a82e">{t('home.people.title')}</h2>
+        <ul class="card-row" role="list">
+          {people.map((p: any) => (
+            <li>
+              <EntryCard
+                href={localizedPath(lang, `/people/${p.data.slug}/`)}
+                title={p.data.title}
+                summary={p.data.summary}
+                cover={p.data.cover}
+                tag={p.data.domains?.[0]}
+                icon="person"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shuffle = (a: any[]) => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  // HERO — random start, crossfade through the pool
+  const heroImgs = Array.from(document.querySelectorAll<HTMLElement>('.hero-img'));
+  if (heroImgs.length > 1) {
+    const order = shuffle(heroImgs.map((_, i) => i));
+    let pos = 0;
+    heroImgs.forEach((el) => el.classList.remove('is-active'));
+    heroImgs[order[0]].classList.add('is-active');
+    if (!reduce) {
+      setInterval(() => {
+        heroImgs[order[pos]].classList.remove('is-active');
+        pos = (pos + 1) % order.length;
+        heroImgs[order[pos]].classList.add('is-active');
+      }, 6000);
+    }
+  }
+
+  // DID YOU KNOW — one row of 4 from the full library, slow gentle crossfade
+  const grid = document.getElementById('dyk-grid');
+  if (grid) {
+    const cards = Array.from(grid.children) as HTMLElement[];
+    if (cards.length > 4) {
+      grid.classList.add('js-ready');
+      const pick = () => {
+        cards.forEach((c) => c.classList.remove('is-shown'));
+        shuffle(cards.map((_, i) => i)).slice(0, 4).forEach((i) => cards[i].classList.add('is-shown'));
+      };
+      pick();
+      if (!reduce)
+        setInterval(() => {
+          grid.classList.add('is-fading');
+          setTimeout(() => { pick(); grid.classList.remove('is-fading'); }, 480);
+        }, 22000);
+    }
+  }
+</script>
+
+<style>
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: min(80vh, 640px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #f6eedd;
+    isolation: isolate;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: #1b1714;
+  }
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.3s ease;
+  }
+  .hero-img.is-active {
+    opacity: 1;
+  }
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(20, 16, 12, 0.35), rgba(20, 16, 12, 0.78));
+  }
+  .hero-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  .hero-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  .hero-inner {
+    text-align: center;
+    padding-block: 2rem;
+  }
+  .hero-kicker {
+    color: var(--color-ochre);
+    font-size: 1.8rem;
+    margin: 0 0 0.25rem;
+  }
+  .hero h1 {
+    font-size: clamp(3rem, 11vw, 6.5rem);
+    margin: 0;
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+  }
+  .hero-tagline {
+    font-size: clamp(1.05rem, 2.6vw, 1.5rem);
+    margin: 0.6rem 0 1.6rem;
+    opacity: 0.95;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    border: 2px solid transparent;
+  }
+  .btn-primary {
+    background: var(--color-vermilion);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-vermilion-deep);
+  }
+  .btn-ghost {
+    border-color: #f6eedd;
+    color: #f6eedd;
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .hero-credit {
+    margin-top: 1.4rem;
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
+    opacity: 0.7;
+  }
+  .hero-credit a {
+    text-decoration: underline;
+    color: var(--color-ochre);
+  }
+  /* DID YOU KNOW: once JS is ready, only the chosen 4 show in a single row (no-JS shows all) */
+  .dyk-grid.js-ready {
+    grid-template-columns: repeat(4, 1fr);
+    transition: opacity 0.45s ease;
+  }
+  .dyk-grid.js-ready.is-fading {
+    opacity: 0;
+  }
+  .dyk-grid.js-ready .dyk-card {
+    display: none;
+  }
+  .dyk-grid.js-ready .dyk-card.is-shown {
+    display: block;
+  }
+  @media (max-width: 900px) {
+    .dyk-grid.js-ready {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 560px) {
+    .dyk-grid.js-ready {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* section titles */
+  .section-title {
+    font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+    margin: 0 0 1.5rem;
+  }
+
+  /* WHAT */
+  .what {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+    padding-block: 3.5rem;
+  }
+  .what-text h2 {
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    margin: 0 0 1rem;
+  }
+  .what-text p {
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: var(--fg);
+    max-width: 34rem;
+  }
+  .stats {
+    list-style: none;
+    padding: 0;
+    margin: 1.75rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .stats li {
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid var(--c, var(--color-vermilion));
+    padding-left: 0.8rem;
+  }
+  .stats li:nth-child(1) {
+    --c: var(--color-vermilion);
+  }
+  .stats li:nth-child(2) {
+    --c: var(--color-indigo);
+  }
+  .stats li:nth-child(3) {
+    --c: var(--color-leaf);
+  }
+  .stats li:nth-child(4) {
+    --c: var(--color-ochre);
+  }
+  .stats strong {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    line-height: 1;
+    color: var(--c, var(--color-vermilion));
+  }
+  .stats span {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .what-map {
+    width: 100%;
+  }
+  .map-cta {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--link);
+    text-decoration: underline;
+  }
+
+  /* PILLARS */
+  .explore {
+    padding-block: 1.5rem 3.5rem;
+  }
+  .pillars {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1.1rem;
+  }
+  .pillar {
+    display: block;
+    height: 100%;
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    padding: 1.3rem 1.3rem 1.4rem;
+    transition:
+      transform 0.18s ease,
+      background 0.18s ease;
+  }
+  .pillar:hover {
+    transform: translateY(-3px);
+    background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  }
+  .pillar-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    color: #fff;
+    background: var(--accent);
+    margin-bottom: 0.7rem;
+  }
+  .pillar h3 {
+    margin: 0 0 0.3rem;
+    font-size: 1.2rem;
+  }
+  .pillar p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* GALLERY */
+  .gallery-band {
+    background: color-mix(in srgb, var(--color-ochre) 12%, var(--bg));
+    padding-block: 3rem;
+  }
+
+  /* DID YOU KNOW */
+  .dyk {
+    padding-block: 3.5rem;
+  }
+  .dyk-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.1rem;
+  }
+  .dyk-card {
+    --c: var(--color-vermilion);
+    background: color-mix(in srgb, var(--c) 10%, var(--surface));
+    padding: 1.2rem 1.3rem;
+    position: relative;
+  }
+  .dyk-card:nth-child(5n + 2) {
+    --c: var(--color-indigo);
+  }
+  .dyk-card:nth-child(5n + 3) {
+    --c: var(--color-leaf);
+  }
+  .dyk-card:nth-child(5n + 4) {
+    --c: var(--color-ochre);
+  }
+  .dyk-card:nth-child(5n + 5) {
+    --c: var(--color-rose);
+  }
+  .dyk-mark {
+    color: var(--c);
+  }
+  .dyk-card p {
+    margin: 0.4rem 0 0.6rem;
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .dyk-card a {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    color: var(--color-indigo);
+    text-decoration: underline;
+  }
+
+  /* PEOPLE */
+  .people {
+    padding-block: 1rem 3.5rem;
+  }
+  .card-row {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 860px) {
+    .what {
+      grid-template-columns: 1fr;
+    }
+    .what-map {
+      min-height: 320px;
+    }
+  }
+</style>

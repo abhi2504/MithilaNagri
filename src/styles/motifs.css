@@ -1,0 +1,69 @@
+/* Madhubani-inspired decorative motifs and borders.
+   Imported globally; used by layouts and section dividers. */
+
+/* Double-line "kohbar" frame around cards/figures. */
+.kohbar-frame {
+  position: relative;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-card);
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--color-ink);
+}
+
+/* Fish-row divider — repeating Mithila fish, tinted by the section accent. */
+.divider-fish {
+  height: 24px;
+  width: 100%;
+  background-color: var(--accent);
+  -webkit-mask: url("/icons/fish-row.svg") repeat-x center / auto 20px;
+  mask: url("/icons/fish-row.svg") repeat-x center / auto 20px;
+  opacity: 0.85;
+}
+
+/* Lotus-row divider. */
+.divider-lotus {
+  height: 24px;
+  width: 100%;
+  background-color: var(--accent);
+  -webkit-mask: url("/icons/lotus-row.svg") repeat-x center / auto 20px;
+  mask: url("/icons/lotus-row.svg") repeat-x center / auto 20px;
+  opacity: 0.85;
+}
+
+/* Subtle Madhubani-style hatched background for hero overlays. */
+.kohbar-bg {
+  background-image:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-ink) 14%, transparent) 1px, transparent 0);
+  background-size: 14px 14px;
+}
+
+/* Accent underline used under section/nav headings. */
+.accent-underline {
+  position: relative;
+}
+.accent-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  height: 3px;
+  width: 3.5rem;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* Decorative diamond bullet (used in lists). */
+.motif-bullet {
+  list-style: none;
+}
+.motif-bullet > li {
+  position: relative;
+  padding-left: 1.4rem;
+}
+.motif-bullet > li::before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.7em;
+  top: 0.3em;
+}

@@ -1,0 +1,155 @@
+{
+  "person-jagdamba-devi": {
+    "src": "/img/person-jagdamba-devi.jpg",
+    "alt": "A Madhubani painting in the Bharni tradition of Jagdamba Devi",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/38529649@N00/1891563899",
+      "author": "Disha Gadhiya",
+      "license": "CC-BY-NC-ND 2.0"
+    },
+    "status": "review"
+  },
+  "person-bharti-dayal": {
+    "src": "/img/person-bharti-dayal.jpg",
+    "alt": "A contemporary Madhubani painting like Bharti Dayal’s",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=161313063",
+      "author": "Sachinyadav99990",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-mahalaxmi-karn": {
+    "src": "/img/person-mahalaxmi-karn.jpg",
+    "alt": "A Mithila painting like Mahalaxmi Karn’s",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=86589788",
+      "author": "RedSaurb",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-jyotirishwar": {
+    "src": "/img/person-jyotirishwar.jpg",
+    "alt": "A palm-leaf manuscript, the form of early Maithili prose",
+    "credit": {
+      "source": "Openverse / europeana",
+      "sourceUrl": "https://wellcomecollection.org/works/c6zh9z2g",
+      "license": "CC-BY-4.0"
+    },
+    "status": "review"
+  },
+  "person-vachaspati": {
+    "src": "/img/person-vachaspati.jpg",
+    "alt": "An old Sanskrit philosophical manuscript",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=74033667",
+      "author": "Ms Sarah Welch",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-mahesh-thakur": {
+    "src": "/img/person-mahesh-thakur.jpg",
+    "alt": "An illustrated Sanskrit manuscript",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/62841309@N08/6125065290",
+      "author": "thesandiegomuseumofartcollection",
+      "license": "CC-BY-NC-ND 2.0"
+    },
+    "status": "review"
+  },
+  "person-chanda-jha": {
+    "src": "/img/person-chanda-jha.jpg",
+    "alt": "A Ramayana manuscript painting",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/62841309@N08/6124515635",
+      "author": "thesandiegomuseumofartcollection",
+      "license": "CC-BY-NC-ND 2.0"
+    },
+    "status": "review"
+  },
+  "person-shankara-mishra": {
+    "src": "/img/person-shankara-mishra.jpg",
+    "alt": "A Sanskrit manuscript folio",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=83997956",
+      "author": "Ms Sarah Welch",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-sita-devi": {
+    "src": "/img/person-sita-devi.jpg",
+    "alt": "A Madhubani painting in the tradition of Sita Devi",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/57519914@N00/5398953719",
+      "author": "jepoirrier",
+      "license": "CC-BY-SA-2.0"
+    },
+    "status": "review"
+  },
+  "person-ganga-devi": {
+    "src": "/img/person-ganga-devi.jpg",
+    "alt": "A Madhubani painting in the tradition of Ganga Devi",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=64949183",
+      "author": "Theshruview",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-pushpa-kumari": {
+    "src": "/img/person-pushpa-kumari.jpg",
+    "alt": "A Madhubani painting in the tradition of Pushpa Kumari",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=64949183",
+      "author": "Theshruview",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-shanti-paswan": {
+    "src": "/img/person-shanti-paswan.jpg",
+    "alt": "A Godna-style Madhubani painting like Shanti Devi Paswan’s",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/49848549@N03/4575663880",
+      "author": "Kala Tarang",
+      "license": "CC-BY-NC-SA 2.0"
+    },
+    "status": "review"
+  },
+  "person-gangesha": {
+    "src": "/img/person-gangesha.jpg",
+    "alt": "A manuscript of the Nyaya school",
+    "credit": {
+      "source": "Openverse / wikimedia",
+      "sourceUrl": "https://commons.wikimedia.org/w/index.php?curid=73935933",
+      "author": "Ms Sarah Welch",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  },
+  "person-ayachi-mishra": {
+    "src": "/img/person-ayachi-mishra.jpg",
+    "alt": "A Maithili manuscript",
+    "credit": {
+      "source": "Openverse / flickr",
+      "sourceUrl": "https://www.flickr.com/photos/23531860@N00/2786531408",
+      "author": "souravdas",
+      "license": "CC-BY-2.0"
+    },
+    "status": "review"
+  }
+}

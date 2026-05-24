@@ -1,0 +1,146 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('history')!;
+const events = (await getLocalizedEntries('timelineEvents', lang)).sort(
+  (a: any, b: any) => a.data.year - b.data.year
+);
+const ERA_COLOR: Record<string, string> = {
+  ancient: '#e0a82e',
+  medieval: '#c8341e',
+  colonial: '#2e4374',
+  modern: '#3e7c4f',
+};
+function yearLabel(y: number) {
+  return y < 0 ? `${Math.abs(y)} BCE` : `${y} CE`;
+}
+const intro =
+  'Three thousand years of history run through Mithila: the Videha kingdom of Sita and the philosopher-kings; the medieval dynasties of Karnat, Oiniwar and Darbhanga; the colonial split at Sugauli; and a living movement for recognition today.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="history">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+    <ol class="timeline" role="list">
+      {
+        events.map((e: any) => (
+          <li class="t-item" style={`--era:${ERA_COLOR[e.data.era] || '#c8341e'}`}>
+            <div class="t-year">{yearLabel(e.data.year)}</div>
+            <div class="t-dot" aria-hidden="true" />
+            <div class="t-body kohbar-frame">
+              <img
+                class="t-illus"
+                src={`/img/illus-history-${e.data.id}.jpg`}
+                alt={`${e.data.title} — illustration in the Mithila style`}
+                loading="lazy"
+                onerror="this.remove()"
+              />
+              <h3>{e.data.title}</h3>
+              <p>{e.data.body}</p>
+              {e.data.place && <span class="t-place">📍 {e.data.place}</span>}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</BaseLayout>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 120px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--line);
+  }
+  .t-item {
+    display: grid;
+    grid-template-columns: 104px 24px 1fr;
+    gap: 0.5rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+  }
+  .t-year {
+    text-align: right;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--era);
+    padding-top: 0.4rem;
+  }
+  .t-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--era);
+    margin-top: 0.5rem;
+    justify-self: center;
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .t-body {
+    background: var(--surface);
+    padding: 1rem 1.2rem;
+  }
+  .t-illus {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 0.85rem;
+  }
+  .t-body h3 {
+    margin: 0 0 0.3rem;
+    font-size: 1.15rem;
+  }
+  .t-body p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 0.95rem;
+  }
+  .t-place {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: var(--era);
+  }
+  @media (max-width: 640px) {
+    .timeline::before {
+      left: 7px;
+    }
+    .t-item {
+      grid-template-columns: 16px 1fr;
+    }
+    .t-year {
+      grid-column: 2;
+      text-align: left;
+      padding-top: 0;
+    }
+    .t-dot {
+      grid-row: 1;
+      margin-top: 0.2rem;
+    }
+    .t-body {
+      grid-column: 2;
+    }
+  }
+</style>

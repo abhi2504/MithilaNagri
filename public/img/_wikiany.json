@@ -1,0 +1,22 @@
+{
+  "person-nagarjun": {
+    "src": "/img/person-nagarjun.jpg",
+    "alt": "The poet Nagarjun (Vaidyanath Mishra)",
+    "credit": {
+      "source": "Wikipedia",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Nagarjun",
+      "license": "unknown"
+    },
+    "status": "review"
+  },
+  "person-udayana": {
+    "src": "/img/person-udayana.jpg",
+    "alt": "The Nyaya logician Udayana",
+    "credit": {
+      "source": "Wikimedia Commons",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Udayana",
+      "license": "CC-BY-SA-4.0"
+    },
+    "status": "review"
+  }
+}

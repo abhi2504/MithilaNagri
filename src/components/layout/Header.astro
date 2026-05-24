@@ -1,0 +1,403 @@
+---
+import { NAV_ORDER, getSection, SITE_NAME, SITE_NAME_TIRHUTA } from '../../lib/constants';
+import { localizedPath, switchLocalePath, useTranslations } from '../../i18n/utils';
+import { LOCALES, LOCALE_INFO, type Locale } from '../../i18n/locales';
+import Icon from '../Icon.astro';
+
+interface Props {
+  lang: Locale;
+  section?: string;
+}
+const { lang, section } = Astro.props;
+const t = useTranslations(lang);
+const path = Astro.url.pathname;
+const navSections = NAV_ORDER.map((id) => getSection(id)).filter(Boolean);
+
+const THEMES = [
+  { key: 'paper', label: 'Paper', sw: '#f5ecdc' },
+  { key: 'daylight', label: 'Daylight', sw: '#ffffff' },
+  { key: 'sepia', label: 'Manuscript', sw: '#ebdbbf' },
+  { key: 'palm', label: 'Palm Leaf', sw: '#eef0e2' },
+  { key: 'night', label: 'Night', sw: '#1b1610' },
+];
+---
+<header class="site-header" data-pagefind-ignore>
+  <div class="bar">
+    <a class="brand" href={localizedPath(lang, '/')} aria-label={SITE_NAME}>
+      <Icon name="fish" size={26} class="brand-fish" />
+      <span class="brand-name">{SITE_NAME}</span>
+      <span class="brand-tirhuta font-tirhuta" aria-hidden="true">{SITE_NAME_TIRHUTA}</span>
+    </a>
+
+    <nav class="primary-nav" aria-label="Sections">
+      {
+        navSections.map((s) => (
+          <a
+            href={localizedPath(lang, `/${s!.id}/`)}
+            class:list={['nav-link', { active: section === s!.id }]}
+            style={`--accent:${s!.accent}`}
+          >
+            {s!.nav?.[lang] ?? s!.labels[lang]}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="actions">
+      <a class="icon-btn" href={localizedPath(lang, '/search/')} aria-label={t('nav.search')}>
+        <Icon name="search" size={20} />
+      </a>
+
+      <details class="lang-switch">
+        <summary aria-label={t('nav.language')}>
+          <Icon name="globe" size={20} />
+          <span>{LOCALE_INFO[lang].native}</span>
+        </summary>
+        <ul role="list">
+          {
+            LOCALES.map((l) => (
+              <li>
+                <a href={switchLocalePath(path, l)} class:list={[{ active: l === lang }]}>
+                  {LOCALE_INFO[l].native}
+                  <small>{LOCALE_INFO[l].english}</small>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </details>
+
+      <details class="theme-switch">
+        <summary aria-label={t('nav.theme')} title={t('nav.theme')}>
+          <Icon name="book" size={20} />
+        </summary>
+        <ul role="list">
+          {
+            THEMES.map((th) => (
+              <li>
+                <button type="button" class="theme-opt" data-theme-key={th.key}>
+                  <span class="sw" style={`background:${th.sw}`} />
+                  {th.label}
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </details>
+
+      <details class="mobile-menu">
+        <summary aria-label={t('nav.menu')}>
+          <span class="hamburger" aria-hidden="true"></span>
+        </summary>
+        <nav class="mobile-nav" aria-label="Sections">
+          {
+            navSections.map((s) => (
+              <a href={localizedPath(lang, `/${s!.id}/`)} class:list={['nav-link', { active: section === s!.id }]}>
+                {s!.labels[lang]}
+              </a>
+            ))
+          }
+        </nav>
+      </details>
+    </div>
+  </div>
+  <div class="divider-fish" aria-hidden="true" style="--accent: var(--color-vermilion)"></div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar {
+    width: 100%;
+    max-width: 92rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 60px;
+    padding-block: 0.5rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  .brand-fish {
+    color: var(--color-vermilion);
+  }
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+  }
+  .brand-tirhuta {
+    color: var(--color-vermilion);
+    font-size: 1.2rem;
+    opacity: 0.85;
+  }
+  .primary-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.7rem;
+    flex: 1;
+    justify-content: center;
+  }
+  .nav-link {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    padding: 0.3rem 0.1rem;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .nav-link:hover {
+    color: var(--fg);
+    border-color: var(--accent);
+  }
+  .nav-link.active {
+    color: var(--fg);
+    border-color: var(--accent);
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .icon-btn:hover {
+    background: var(--alt);
+  }
+
+  /* theme picker */
+  .theme-switch {
+    position: relative;
+  }
+  .theme-switch summary {
+    list-style: none;
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    color: var(--fg);
+  }
+  .theme-switch summary::-webkit-details-marker {
+    display: none;
+  }
+  .theme-switch summary:hover {
+    background: var(--alt);
+  }
+  .theme-switch ul {
+    position: absolute;
+    right: 0;
+    top: 110%;
+    list-style: none;
+    margin: 0;
+    padding: 0.35rem;
+    min-width: 168px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    z-index: 60;
+  }
+  .theme-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: none;
+    background: none;
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .theme-opt:hover,
+  .theme-opt.active {
+    background: var(--alt);
+  }
+  .theme-opt.active {
+    font-weight: 600;
+  }
+  .theme-opt .sw {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  /* language dropdown */
+  .lang-switch {
+    position: relative;
+  }
+  .lang-switch summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+  }
+  .lang-switch summary::-webkit-details-marker {
+    display: none;
+  }
+  .lang-switch summary:hover {
+    background: var(--alt);
+  }
+  .lang-switch ul {
+    position: absolute;
+    right: 0;
+    top: 110%;
+    list-style: none;
+    margin: 0;
+    padding: 0.35rem;
+    min-width: 150px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  }
+  .lang-switch a {
+    display: flex;
+    flex-direction: column;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+  }
+  .lang-switch a small {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+  .lang-switch a:hover,
+  .lang-switch a.active {
+    background: var(--alt);
+  }
+
+  /* mobile menu */
+  .mobile-menu {
+    display: none;
+  }
+  .mobile-menu summary {
+    list-style: none;
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+  }
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .hamburger,
+  .hamburger::before,
+  .hamburger::after {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--fg);
+    position: relative;
+  }
+  .hamburger::before,
+  .hamburger::after {
+    content: '';
+    position: absolute;
+  }
+  .hamburger::before {
+    top: -7px;
+  }
+  .hamburger::after {
+    top: 7px;
+  }
+  .mobile-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1.25rem 1rem;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+  }
+  .mobile-nav .nav-link {
+    padding: 0.7rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  @media (max-width: 1180px) {
+    .primary-nav {
+      display: none;
+    }
+    .mobile-menu {
+      display: block;
+    }
+  }
+  @media (max-width: 520px) {
+    .brand-tirhuta {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const root = document.documentElement;
+  const opts = document.querySelectorAll('.theme-opt');
+  function current() {
+    try {
+      return localStorage.getItem('theme') || 'night';
+    } catch (_) {
+      return 'night';
+    }
+  }
+  function mark(t: string) {
+    opts.forEach((o) => o.classList.toggle('active', o.getAttribute('data-theme-key') === t));
+  }
+  mark(current());
+  opts.forEach((o) => {
+    o.addEventListener('click', () => {
+      const t = o.getAttribute('data-theme-key');
+      if (!t) return;
+      if (t === 'paper') root.removeAttribute('data-theme');
+      else root.setAttribute('data-theme', t);
+      try {
+        localStorage.setItem('theme', t);
+      } catch (_) {}
+      mark(t);
+      const d = o.closest('details');
+      if (d) d.removeAttribute('open');
+    });
+  });
+</script>

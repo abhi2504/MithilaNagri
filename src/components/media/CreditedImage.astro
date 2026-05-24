@@ -1,0 +1,95 @@
+---
+import { getMedia } from '../../lib/media';
+
+interface Props {
+  id: string;
+  class?: string;
+  imgClass?: string;
+  priority?: boolean;
+  width?: number;
+  height?: number;
+  showCredit?: boolean;
+  sizes?: string;
+}
+const {
+  id,
+  class: className = '',
+  imgClass = '',
+  priority = false,
+  width,
+  height,
+  showCredit = true,
+} = Astro.props;
+
+// Throws at build if the id is unknown or flagged for takedown — no uncredited images ship.
+const m = getMedia(id);
+const creditLine = `${m.credit.source}${m.credit.author ? ` · ${m.credit.author}` : ''} · ${m.credit.license}`;
+---
+<figure class:list={['credited-image', className]}>
+  <img
+    src={m.src}
+    alt={m.alt}
+    width={width}
+    height={height}
+    loading={priority ? 'eager' : 'lazy'}
+    decoding="async"
+    fetchpriority={priority ? 'high' : 'auto'}
+    class={imgClass}
+    onerror="this.onerror=null;this.src='/icons/placeholder.svg';this.classList.add('img-fallback');"
+  />
+  {
+    showCredit && (
+      <figcaption class="credit-chip">
+        <a href={m.credit.sourceUrl} target="_blank" rel="noopener noreferrer">
+          {creditLine}
+        </a>
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .credited-image {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    background: var(--alt);
+  }
+  .credited-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .credit-chip {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    max-width: 85%;
+    padding: 3px 7px;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1.3;
+    color: #fff;
+    background: color-mix(in srgb, #000 60%, transparent);
+    border-top-left-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .credit-chip a {
+    color: #fff;
+  }
+  .credited-image:hover .credit-chip,
+  .credited-image:focus-within .credit-chip {
+    opacity: 1;
+  }
+  .img-fallback {
+    object-fit: contain !important;
+    padding: 6%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .credit-chip {
+      transition: none;
+    }
+  }
+</style>

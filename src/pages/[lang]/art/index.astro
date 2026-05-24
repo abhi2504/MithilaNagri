@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
+import { getSection } from '../../../lib/constants';
+import { getLocalizedEntries } from '../../../lib/content';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as Locale;
+const s = getSection('art')!;
+const entries = await getLocalizedEntries('artStyles', lang);
+const intro =
+  'Mithila painting — known to the world as Madhubani — began on the mud walls and courtyards of the region’s homes, painted by women for weddings, festivals and worship. Discovered beyond Mithila after the 1934 earthquake and carried onto paper during the droughts of the 1960s, it earned a GI tag in 2007. These are its principal styles.';
+---
+<BaseLayout title={s.labels[lang]} description={s.blurbs[lang]} accent={s.accent} section="art">
+  <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
+  <div class="container-wide hub" data-pagefind-body>
+    <p class="hub-intro">{intro}</p>
+    <ul class="card-grid" role="list">
+      {
+        entries.map((e: any) => (
+          <li>
+            <EntryCard
+              href={localizedPath(lang, `/art/${e.data.slug}/`)}
+              title={e.data.title}
+              summary={e.data.summary}
+              cover={e.data.cover}
+              tag={e.data.community}
+              icon="lotus"
+            />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

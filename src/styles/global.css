@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens (Madhubani palette) ───────────────────────── */
+@theme {
+  /* Pigment palette */
+  --color-paper: #f5ecdc;
+  --color-paper-deep: #eadfc7;
+  --color-ink: #1b1714;
+  --color-vermilion: #c8341e;
+  --color-vermilion-deep: #a02817;
+  --color-ochre: #e0a82e;
+  --color-indigo: #2e4374;
+  --color-leaf: #3e7c4f;
+  --color-rose: #d86b7e;
+
+  /* Typography */
+  --font-display: "Tiro Devanagari Hindi", Georgia, serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --font-deva: "Noto Serif Devanagari", "Tiro Devanagari Hindi", serif;
+  --font-tirhuta: "Noto Sans Tirhuta", serif;
+
+  --radius-card: 0.75rem;
+}
+
+/* Semantic colors that flip in dark mode. `@theme inline` keeps the utilities
+   (bg-bg, text-fg, border-line, …) bound to the live CSS variables. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --bg: #f5ecdc;
+  --surface: #fffaf0;
+  --alt: #eadfc7; /* hover / alternate surface */
+  --fg: #1b1714;
+  --muted: #6b5f50;
+  --line: #d8c9ad;
+  --link: #c8341e;
+  --accent: #c8341e; /* default section accent (overridden per section) */
+}
+
+/* Alternate themes. Each only re-binds the semantic variables, so every
+   component adapts automatically. Accent colours stay per-section. */
+
+/* Daylight — a cleaner, brighter light. */
+[data-theme='daylight'] {
+  --bg: #faf6ef;
+  --surface: #ffffff;
+  --alt: #f0e9dc;
+  --fg: #211c17;
+  --muted: #6b6256;
+  --line: #e4dbcb;
+  --link: #c8341e;
+}
+
+/* Manuscript — warm aged parchment (key kept as "sepia" for compatibility). */
+[data-theme='sepia'] {
+  --bg: #ebdbbf;
+  --surface: #f3e8ce;
+  --alt: #e1cfa9;
+  --fg: #3a2c1e;
+  --muted: #6f5d44;
+  --line: #cdb98f;
+  --link: #a02817;
+}
+
+/* Palm Leaf — a cool, fresh, leafy light. */
+[data-theme='palm'] {
+  --bg: #eef0e2;
+  --surface: #f8faf0;
+  --alt: #e0e5cf;
+  --fg: #20251c;
+  --muted: #5e6553;
+  --line: #d2d8c0;
+  --link: #b34a1f;
+}
+
+/* Night — a warm lamp-lit dark (never pure black). */
+[data-theme='night'] {
+  --bg: #1b1610;
+  --surface: #271f18;
+  --alt: #342a20;
+  --fg: #f1e7d4;
+  --muted: #b3a48d;
+  --line: #3b3127;
+  --link: #e8b23e;
+}
+
+/* ───────────────────────── Base layer ───────────────────────── */
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  /* Indic-script font switching */
+  :lang(hi),
+  :lang(mai) {
+    font-family: var(--font-deva);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  [data-script="tirhuta"],
+  .font-tirhuta {
+    font-family: var(--font-tirhuta);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--color-ochre);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-vermilion);
+    outline-offset: 2px;
+  }
+}
+
+/* ───────────────────────── Helpers ───────────────────────── */
+@layer components {
+  .container-wide {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  .container-prose {
+    width: 100%;
+    max-width: 46rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  .hub {
+    padding-block: 2.5rem 3.5rem;
+  }
+  .hub-intro {
+    max-width: 46rem;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin: 0 0 2.25rem;
+  }
+  .card-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.75rem;
+  }
+}
