@@ -51,6 +51,16 @@ const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p
         data-rs-panel={i}
         hidden={i !== 0}
       >
+        <button
+          class={`rs-acc-toggle${s.context ? ' is-context' : ''}`}
+          type="button"
+          aria-controls={`panel-${slug}-${s.key}`}
+          aria-expanded={i === 0 ? 'true' : 'false'}
+        >
+          <span class="rs-tab-num">{s.context ? 'i' : n}</span>
+          <span class="rs-acc-label">{s.label}</span>
+          <span class="rs-acc-chev" aria-hidden="true">▾</span>
+        </button>
         <figure class="rs-fig" data-step={n || 'i'}>
           <img
             src={s.context && coverSrc ? coverSrc : `/img/stage-${slug}-${s.key}.jpg`}
@@ -133,16 +143,46 @@ const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p
     const tabs = Array.from(rs.querySelectorAll<HTMLButtonElement>('.rs-tab'));
     const panels = Array.from(rs.querySelectorAll<HTMLElement>('.rs-panel'));
     const dots = Array.from(rs.querySelectorAll<HTMLElement>('.rs-dot'));
+    const heads = Array.from(rs.querySelectorAll<HTMLButtonElement>('.rs-acc-toggle'));
+    const mq = window.matchMedia('(max-width: 760px)');
     let cur = 0;
-    const show = (n: number) => {
+
+    // DESKTOP: tabs — one panel visible at a time.
+    const showTab = (n: number) => {
       cur = (n + panels.length) % panels.length;
       tabs.forEach((t, i) => { t.classList.toggle('is-active', i === cur); t.setAttribute('aria-selected', i === cur ? 'true' : 'false'); });
       panels.forEach((p, i) => { p.classList.toggle('is-active', i === cur); p.hidden = i !== cur; });
       dots.forEach((d, i) => d.classList.toggle('is-active', i === cur));
     };
-    tabs.forEach((t, i) => t.addEventListener('click', () => show(i)));
-    rs.querySelector('[data-rs-prev]')?.addEventListener('click', () => show(cur - 1));
-    rs.querySelector('[data-rs-next]')?.addEventListener('click', () => show(cur + 1));
+
+    // MOBILE: accordion — all stages listed, each independently expandable.
+    const setOpen = (i: number, open: boolean) => {
+      panels[i].classList.toggle('rs-open', open);
+      heads[i]?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    const apply = () => {
+      if (mq.matches) {
+        // accordion: reveal every panel, collapse all but the current
+        panels.forEach((p, i) => { p.hidden = false; p.classList.remove('is-active'); setOpen(i, i === cur); });
+      } else {
+        // tabs: clear accordion state and show the current panel only
+        panels.forEach((p) => p.classList.remove('rs-open'));
+        showTab(cur);
+      }
+    };
+
+    tabs.forEach((t, i) => t.addEventListener('click', () => { cur = i; showTab(i); }));
+    rs.querySelector('[data-rs-prev]')?.addEventListener('click', () => showTab(cur - 1));
+    rs.querySelector('[data-rs-next]')?.addEventListener('click', () => showTab(cur + 1));
+    heads.forEach((h, i) => h.addEventListener('click', () => {
+      const open = !panels[i].classList.contains('rs-open');
+      setOpen(i, open);
+      if (open) cur = i;
+    }));
+
+    mq.addEventListener('change', apply);
+    apply();
   });
 </script>
 
@@ -228,6 +268,10 @@ const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p
   .rs-tab.is-context .rs-tab-num {
     font-style: normal;
   }
+
+  /* Accordion headers — desktop uses tabs, so these are hidden here.
+     They become the stage toggles on mobile (see the max-width query). */
+  .rs-acc-toggle { display: none; }
 
   /* PANELS */
   .rs-panels {
@@ -511,16 +555,64 @@ const paras = (t = '') => t.split(/\n\n+/).map((p) => `<p class="rs-text">${md(p
   }
 
   @media (max-width: 760px) {
-    .rs-panel {
-      grid-template-columns: 1fr;
+    /* MOBILE = ACCORDION. A long tab strip doesn't work on a phone: you'd tap a
+       tab at the top, scroll down to read, then scroll back up to switch. Instead
+       each stage becomes a tappable header that expands its content inline, so the
+       next stage's header is always right below what you just read. */
+    .rs-tabs,
+    .rs-nav,
+    .rs-hint { display: none; }
+
+    .rs-panels {
+      margin-top: 0.6rem;
+      border-top: 1px solid color-mix(in srgb, var(--rs-accent) 22%, var(--line));
     }
-    /* On one column the image must NOT stick — it would pin to the top and the
-       text would scroll underneath it. Make it a normal banner that scrolls away. */
-    .rs-fig {
+    .rs-panel {
+      display: block;
+      border-bottom: 1px solid color-mix(in srgb, var(--rs-accent) 22%, var(--line));
+      animation: none;
+    }
+
+    .rs-acc-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      background: none;
+      border: 0;
+      padding: 0.95rem 0.1rem;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--fg);
+      text-align: left;
+      cursor: pointer;
+      scroll-margin-top: 70px;
+    }
+    .rs-acc-toggle.is-context { font-style: italic; color: var(--muted); }
+    .rs-acc-label { flex: 1; min-width: 0; }
+    .rs-acc-chev {
+      color: var(--rs-accent);
+      font-size: 0.85rem;
+      transition: transform 0.2s ease;
+    }
+    .rs-panel.rs-open .rs-acc-chev { transform: rotate(180deg); }
+
+    /* Collapsed: only the header shows. Expanded (.rs-open): reveal image + body. */
+    .rs-fig,
+    .rs-body { display: none; }
+    .rs-panel.rs-open .rs-fig {
+      display: block;
       position: static;
       top: auto;
       height: auto;
       aspect-ratio: 3 / 2;
+      margin-bottom: 1rem;
+    }
+    .rs-panel.rs-open .rs-body {
+      display: block;
+      padding-bottom: 1.2rem;
     }
   }
 </style>

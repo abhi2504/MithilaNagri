@@ -107,6 +107,14 @@ const sectionHref = localizedPath(lang, `/${section}/`);
       }
     </aside>
   </div>
+
+  <div class="container-wide">
+    <nav class="entry-foot" aria-label="Section navigation">
+      <a class="entry-back" href={sectionHref}>
+        <span aria-hidden="true">←</span> All {s.labels[lang]}
+      </a>
+    </nav>
+  </div>
 </BaseLayout>
 
 <style>
@@ -174,6 +182,32 @@ const sectionHref = localizedPath(lang, `/${section}/`);
     margin: 0;
     font-size: 0.95rem;
   }
+  /* Footer back-navigation — so you can always return to the section without
+     scrolling to the top breadcrumb (essential on mobile, useful on desktop). */
+  .entry-foot {
+    margin: 0.5rem 0 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .entry-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0.6rem 1.15rem;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+    border-radius: 999px;
+    background: var(--surface);
+    transition: border-color 0.16s ease, background 0.16s ease;
+  }
+  .entry-back:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
   @media (max-width: 900px) {
     .entry-grid {
       grid-template-columns: 1fr;
@@ -182,6 +216,15 @@ const sectionHref = localizedPath(lang, `/${section}/`);
     .entry-aside {
       position: static;
       order: -1;
+    }
+  }
+  @media (max-width: 760px) {
+    .entry-back {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      padding: 0.9rem;
+      font-size: 1rem;
     }
   }
 </style>
