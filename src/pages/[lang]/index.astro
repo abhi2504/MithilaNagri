@@ -41,8 +41,12 @@ const mapPoints = places
 // Pillars (exclude the Discover meta-section)
 const pillars = NAV_ORDER.filter((id) => id !== 'discover').map((id) => getSection(id)!);
 
-// Did you know — render the whole library; JS shows a random rotating 6.
+// Did you know — render only an initial six cards (light DOM / no-JS fallback);
+// the full library travels as compact JSON and JS rotates fresh facts into the
+// visible slots from that pool.
 const facts = await getLocalizedEntries('didYouKnow', lang);
+const dykInitial = facts.slice(0, 6);
+const dykPool = facts.map((f: any) => ({ t: f.data.fact, s: f.data.sourceUrl ?? null }));
 
 // Featured people
 const people = (await getLocalizedEntries('personalities', lang)).filter(
@@ -156,9 +160,9 @@ const stats = [
   <!-- DID YOU KNOW -->
   <section class="dyk container-wide">
     <h2 class="section-title accent-underline" style="--accent:#2e4374">{t('home.didyouknow.title')}</h2>
-    <ul class="dyk-grid" id="dyk-grid" role="list">
+    <ul class="dyk-grid" id="dyk-grid" role="list" data-source-label={t('common.source')}>
       {
-        facts.map((f: any) => (
+        dykInitial.map((f: any) => (
           <li class="dyk-card kohbar-frame">
             <span class="dyk-mark" aria-hidden="true"><Icon name="fish" size={20} /></span>
             <p>{f.data.fact}</p>
@@ -169,6 +173,7 @@ const stats = [
         ))
       }
     </ul>
+    <script type="application/json" id="dyk-pool" set:html={JSON.stringify(dykPool)}></script>
   </section>
 
   <!-- PEOPLE -->
@@ -222,17 +227,44 @@ const stats = [
     }
   }
 
-  // DID YOU KNOW — one row of 4 from the full library, slow gentle crossfade
+  // DID YOU KNOW — four visible slots, refreshed from the full fact pool
   const grid = document.getElementById('dyk-grid');
   if (grid) {
     const cards = Array.from(grid.children) as HTMLElement[];
-    if (cards.length > 4) {
+    let pool: { t: string; s: string | null }[] = [];
+    try { pool = JSON.parse(document.getElementById('dyk-pool')?.textContent || '[]'); } catch (_) {}
+    const SHOWN = 4;
+    const sourceLabel = grid.getAttribute('data-source-label') || 'Source';
+    if (cards.length >= SHOWN && pool.length > SHOWN) {
       grid.classList.add('js-ready');
-      const pick = () => {
-        cards.forEach((c) => c.classList.remove('is-shown'));
-        shuffle(cards.map((_, i) => i)).slice(0, 4).forEach((i) => cards[i].classList.add('is-shown'));
+      // Write SHOWN fresh facts (drawn from the whole library) into the first
+      // SHOWN cards; the rest stay hidden. Slots are fixed so the accent
+      // colours (positional) don't flicker between refreshes.
+      const fill = () => {
+        const idx = shuffle(pool.map((_, i) => i)).slice(0, SHOWN);
+        cards.forEach((card, i) => {
+          if (i >= SHOWN) { card.classList.remove('is-shown'); return; }
+          const f = pool[idx[i]];
+          const p = card.querySelector('p');
+          if (p) p.textContent = f.t;
+          let a = card.querySelector('a');
+          if (f.s) {
+            if (!a) {
+              a = document.createElement('a');
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              card.appendChild(a);
+            }
+            a.href = f.s;
+            a.textContent = sourceLabel;
+            a.hidden = false;
+          } else if (a) {
+            a.hidden = true;
+          }
+          card.classList.add('is-shown');
+        });
       };
-      pick();
+      fill();
       if (!reduce) {
         // Don't swap a card out from under someone who's reading it: pause while
         // the pointer is over the grid (desktop), for a short window after a
@@ -247,7 +279,7 @@ const stats = [
         setInterval(() => {
           if (paused || document.hidden) return;
           grid.classList.add('is-fading');
-          setTimeout(() => { pick(); grid.classList.remove('is-fading'); }, 480);
+          setTimeout(() => { fill(); grid.classList.remove('is-fading'); }, 480);
         }, 22000);
       }
     }
@@ -388,12 +420,6 @@ const stats = [
   @media (max-width: 560px) {
     .dyk-grid.js-ready {
       grid-template-columns: 1fr;
-    }
-    /* Before JS collapses the grid to a rotating few, don't stack the entire
-       fact library on a phone. No-JS phones still see a healthy six; desktop
-       and the JS-ready path are unaffected. */
-    .dyk-grid:not(.js-ready) .dyk-card:nth-child(n + 7) {
-      display: none;
     }
   }
 
