@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHero from '../../../components/content/SectionHero.astro';
+import EntryCard from '../../../components/content/EntryCard.astro';
 import { LOCALES, type Locale } from '../../../i18n/locales';
+import { localizedPath } from '../../../i18n/utils';
 import { getSection } from '../../../lib/constants';
 import { getLocalizedEntries } from '../../../lib/content';
 
@@ -12,6 +14,9 @@ const lang = Astro.params.lang as Locale;
 const s = getSection('history')!;
 const events = (await getLocalizedEntries('timelineEvents', lang)).sort(
   (a: any, b: any) => a.data.year - b.data.year
+);
+const articles = (await getLocalizedEntries('articles', lang)).filter(
+  (e: any) => e.data.section === 'history'
 );
 const ERA_COLOR: Record<string, string> = {
   ancient: '#e0a82e',
@@ -29,6 +34,27 @@ const intro =
   <SectionHero lang={lang} title={s.labels[lang]} blurb={s.blurbs[lang]} icon={s.icon} crumbs={[{ label: s.labels[lang] }]} />
   <div class="container-wide hub" data-pagefind-body>
     <p class="hub-intro">{intro}</p>
+
+    {articles.length > 0 && (
+      <section class="deep-dives">
+        <h2 class="dd-title accent-underline">Deep dives</h2>
+        <ul class="card-grid" role="list">
+          {articles.map((e: any) => (
+            <li>
+              <EntryCard
+                href={localizedPath(lang, `/history/${e.data.slug}/`)}
+                title={e.data.title}
+                summary={e.data.summary}
+                cover={e.data.cover}
+                icon="temple"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <h2 class="dd-title accent-underline">The timeline</h2>
     <ol class="timeline" role="list">
       {
         events.map((e: any) => (
@@ -55,6 +81,8 @@ const intro =
 </BaseLayout>
 
 <style>
+  .deep-dives { margin-bottom: 2.6rem; }
+  .dd-title { font-size: clamp(1.3rem, 3vw, 1.6rem); margin: 0 0 1.1rem; }
   .timeline {
     list-style: none;
     margin: 0;

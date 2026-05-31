@@ -1,0 +1,31 @@
+---
+import EntryLayout from '../../../layouts/EntryLayout.astro';
+import { render, getCollection } from 'astro:content';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { getLocalizedEntry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const all = await getCollection('articles');
+  const slugs = [
+    ...new Set(all.filter((e: any) => e.data.section === 'history').map((e: any) => e.data.slug)),
+  ];
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ params: { lang, slug } })));
+}
+const lang = Astro.params.lang as Locale;
+const slug = Astro.params.slug as string;
+const entry = await getLocalizedEntry('articles', slug, lang);
+if (!entry) return Astro.redirect('/404');
+const d: any = entry.data;
+const { Content } = await render(entry);
+---
+<EntryLayout
+  lang={lang}
+  section="history"
+  title={d.title}
+  summary={d.summary}
+  cover={d.cover}
+  gallery={d.gallery}
+  sources={d.sources}
+>
+  <Content />
+</EntryLayout>

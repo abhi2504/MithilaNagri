@@ -40,7 +40,7 @@ export const MAP_POINTS: MapPoint[] = [
   { id: 'janaki-mandir', name: 'Janaki Mandir', type: 'temple', lng: 85.924, lat: 26.731, blurb: 'The grand marble temple of Sita at Janakpur — the spiritual heart of Mithila.', img: 'place-janaki', link: { section: 'places', slug: 'janaki-mandir' } },
   { id: 'janakpur', name: 'Janakpur', type: 'town', lng: 85.925, lat: 26.708, blurb: 'Capital of Nepal’s Madhesh province and the mythic capital of Videha.' },
   { id: 'matihani', name: 'Matihani', type: 'village', lng: 85.85, lat: 26.652, blurb: 'Site of the Matkor soil-gathering ritual on the Mithila Parikrama.', link: { section: 'villages', slug: 'matihani' } },
-  { id: 'jaleshwar', name: 'Jaleshwar', type: 'town', lng: 85.80, lat: 26.652, blurb: 'Headquarters of Mahottari district, Nepal; an ancient Shiva shrine.' },
+  { id: 'jaleshwar', name: 'Jaleshwar', type: 'town', lng: 85.80, lat: 26.652, blurb: 'Headquarters of Mahottari district, Nepal — grown around the Jaleshwarnath Mahadev temple.', link: { section: 'places', slug: 'jaleshwar-mahadev' } },
   { id: 'malangwa', name: 'Malangwa', type: 'town', lng: 85.563, lat: 26.862, blurb: 'Headquarters of Sarlahi district, Nepal.' },
   { id: 'siraha', name: 'Siraha', type: 'town', lng: 86.205, lat: 26.655, blurb: 'A Maithili-speaking district town of the Nepal Terai.' },
   { id: 'rajbiraj', name: 'Rajbiraj', type: 'town', lng: 86.747, lat: 26.543, blurb: 'Headquarters of Saptari district, easternmost Madhesh.' },
@@ -99,7 +99,7 @@ export const MAP_POINTS: MapPoint[] = [
   { id: 'ram-mandir-janakpur', name: 'Ram Mandir, Janakpur', type: 'temple', lng: 85.927, lat: 26.726, blurb: 'A pagoda-style Ram temple of the 1700s — among Janakpur’s oldest shrines.' },
   { id: 'vivah-mandap', name: 'Vivah Mandap, Janakpur', type: 'temple', lng: 85.921, lat: 26.732, blurb: 'The marble pavilion marking the marriage of Rama and Sita.' },
   { id: 'ganga-sagar', name: 'Ganga Sagar, Janakpur', type: 'ghat', lng: 85.93, lat: 26.724, blurb: 'A sacred tank at Janakpur, central to its Chhath observance.' },
-  { id: 'dhanushadham', name: 'Dhanushadham', type: 'temple', lng: 86.18, lat: 26.86, blurb: 'Where a fragment of Shiva’s broken bow is said to have fallen.' },
+  { id: 'dhanushadham', name: 'Dhanushadham', type: 'temple', lng: 86.04, lat: 26.82, blurb: 'Where a fragment of Shiva’s broken bow is said to have fallen — a major Mithila pilgrimage in Dhanusha, Nepal.', link: { section: 'places', slug: 'dhanushadham' } },
   { id: 'salhesh', name: 'Salhesh Shrine, Mahisautha', type: 'temple', lng: 86.2, lat: 26.64, blurb: 'A shrine of Raja Salhesh, the egalitarian Dusadh folk-hero.' },
   { id: 'hariharnath', name: 'Hariharnath, Sonepur', type: 'temple', lng: 85.18, lat: 25.7, blurb: 'A Harihar temple at Sonepur, site of Asia’s famed cattle fair.' },
   { id: 'vishnupad', name: 'Vishnupad, Gaya', type: 'temple', lng: 84.99, lat: 24.78, blurb: 'Vishnu’s footprint shrine, the focus of the Pind-Daan rites.' },
@@ -108,6 +108,16 @@ export const MAP_POINTS: MapPoint[] = [
   { id: 'areraj', name: 'Someshwar Nath, Areraj', type: 'temple', lng: 84.66, lat: 26.55, blurb: 'A revered ancient Shiva temple of the Champaran plains.' },
   { id: 'simaria-ghat', name: 'Simaria Ghat', type: 'ghat', lng: 86.13, lat: 25.43, blurb: 'A great Ganga bathing-ghat at Begusarai, site of a month-long Kalpvas.' },
   { id: 'rasidpur', name: 'Rasidpur', type: 'art', lng: 86.05, lat: 26.34, blurb: 'A Madhubani painting village near Jitwarpur.' },
+
+  // ── newly added sites & literary villages ──
+  { id: 'saurath-sabha', name: 'Saurath Sabha Gachhi', type: 'venue', lng: 86.041, lat: 26.394, blurb: 'The mango grove where Maithil Brahmins gathered for centuries to arrange marriages by the Panji genealogies.', link: { section: 'places', slug: 'saurath-sabha' } },
+  { id: 'bisfi-dih', name: 'Bisfi Vidyapati Dih', type: 'heritage', lng: 86.06, lat: 26.44, blurb: 'The residence-mound of the poet Vidyapati at Bisfi, his ancestral village.', link: { section: 'places', slug: 'bisfi-vidyapati-dih' } },
+  { id: 'kandaha-surya', name: 'Kandaha Surya Mandir', type: 'temple', lng: 86.47, lat: 25.86, blurb: 'A medieval black-stone Sun temple in Saharsa, with a finely carved Surya panel.', link: { section: 'places', slug: 'kandaha-surya-mandir' } },
+  { id: 'salahesh-fulbari', name: 'Salahesh Fulbari', type: 'heritage', lng: 86.448, lat: 26.714, blurb: 'The legendary flower-garden of the folk-hero Raja Salhesh at Siraha, Nepal.', link: { section: 'places', slug: 'salahesh-fulbari' } },
+  { id: 'tarauni', name: 'Tarauni', type: 'village', lng: 85.965, lat: 26.225, blurb: 'Ancestral village of the poet Nagarjun (Vaidyanath Mishra).', link: { section: 'villages', slug: 'tarauni' } },
+  { id: 'kariyan', name: 'Kariyan', type: 'village', lng: 86.010, lat: 25.854, blurb: 'Traditional birthplace of the Nyaya logician Udayanacharya.', link: { section: 'villages', slug: 'kariyan' } },
+  { id: 'mangrauni', name: 'Mangrauni', type: 'village', lng: 86.072, lat: 26.348, blurb: 'An old Maithil temple village near Madhubani, long a seat of astrology and scholarship.', link: { section: 'villages', slug: 'mangrauni' } },
+  { id: 'lohna', name: 'Lohna', type: 'village', lng: 86.250, lat: 26.225, blurb: 'Birthplace of the medieval Maithili dramatist Umapati Upadhyaya.', link: { section: 'villages', slug: 'lohna' } },
 ];
 
 export interface River {
