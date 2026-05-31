@@ -637,7 +637,24 @@ export function initAtlas() {
   // (map uses a fixed cartographic palette, so it does not follow the page theme)
 
   const ro = new ResizeObserver(() => {
+    // Recompute the projection on every size change — keeping the world point
+    // at the canvas centre and the current zoom ratio. Without this the map
+    // goes stale whenever the canvas resizes; on mobile the URL bar shows/hides
+    // on scroll (changing 60vh constantly), which left the map shifted, letter-
+    // boxed or clustered. Preserving centre+zoom re-fits without jarring the view.
+    const hadView = CW > 0 && CH > 0 && fit > 0;
+    const cxw = hadView ? (CW / 2 - panX) / scale : 0;
+    const cyw = hadView ? (CH / 2 - panY) / scale : 0;
+    const zr = hadView ? scale / fit : 1;
     resize();
+    if (hadView) {
+      fit = Math.min(CW / BW, CH / BH) * 0.98;
+      scale = fit * zr;
+      panX = CW / 2 - cxw * scale;
+      panY = CH / 2 - cyw * scale;
+    } else {
+      doFit();
+    }
     schedule();
   });
   ro.observe(wrap);
