@@ -139,6 +139,13 @@ const year = new Date().getFullYear();
     }
     .site-footer ul {
       grid-template-columns: 1fr 1fr;
+      row-gap: 0;
+    }
+    /* Give the tightly-packed footer links a 44px touch height on phones. */
+    .site-footer a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
     }
   }
 </style>

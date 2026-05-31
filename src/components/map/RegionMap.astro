@@ -107,8 +107,34 @@ const typesPresent = [...new Set(pins.map((p) => p.type ?? 'temple'))];
       ))
     }
   </ul>
-  <figcaption>Schematic map — hover a marker for its name, click to open.</figcaption>
+  <figcaption>Schematic map — hover or tap a marker for its name, then open it.</figcaption>
 </figure>
+
+<script>
+  // Touch devices have no hover, so the marker labels (revealed via :hover on
+  // desktop) would never show and a tap would navigate blind. On no-hover
+  // pointers, make the first tap reveal the name and the second tap open it.
+  if (window.matchMedia('(hover: none)').matches) {
+    document.querySelectorAll<HTMLElement>('.region-map').forEach((map) => {
+      const pins = Array.from(map.querySelectorAll<HTMLElement>('.rm-pin'));
+      pins.forEach((pin) => {
+        pin.addEventListener('click', (e) => {
+          if (!pin.classList.contains('is-active')) {
+            e.preventDefault(); // first tap: reveal, don't navigate yet
+            pins.forEach((p) => p.classList.remove('is-active'));
+            pin.classList.add('is-active');
+          }
+          // second tap on the same (already-active) pin falls through to navigate
+        });
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest('.rm-pin')) {
+        document.querySelectorAll('.rm-pin.is-active').forEach((p) => p.classList.remove('is-active'));
+      }
+    });
+  }
+</script>
 
 <style>
   .region-map {
@@ -130,7 +156,8 @@ const typesPresent = [...new Set(pins.map((p) => p.type ?? 'temple'))];
     transition: r 0.12s ease;
   }
   .rm-pin:hover circle,
-  .rm-pin:focus circle {
+  .rm-pin:focus circle,
+  .rm-pin.is-active circle {
     r: 8;
   }
   .rm-label {
@@ -145,7 +172,8 @@ const typesPresent = [...new Set(pins.map((p) => p.type ?? 'temple'))];
     pointer-events: none;
   }
   .rm-pin:hover .rm-label,
-  .rm-pin:focus .rm-label {
+  .rm-pin:focus .rm-label,
+  .rm-pin.is-active .rm-label {
     opacity: 1;
   }
   .rm-legend {

@@ -5,6 +5,7 @@ import type { Locale } from './locales';
 export const UI = {
   en: {
     'site.tagline': 'Land of Sita · Home of an Ancient Civilisation',
+    'site.descriptor': 'An illustrated guide to its land, art, festivals & people.',
     'nav.search': 'Search',
     'nav.menu': 'Menu',
     'nav.close': 'Close',
@@ -36,6 +37,7 @@ export const UI = {
   },
   hi: {
     'site.tagline': 'सीता की भूमि · एक प्राचीन सभ्यता का घर',
+    'site.descriptor': 'इसकी धरती, कला, पर्व और लोगों की सचित्र गाइड।',
     'nav.search': 'खोजें',
     'nav.menu': 'मेन्यू',
     'nav.close': 'बंद करें',
@@ -67,6 +69,7 @@ export const UI = {
   },
   mai: {
     'site.tagline': 'सीताक भूमि · एक प्राचीन सभ्यताक घर',
+    'site.descriptor': 'एकर माटि, कला, पाबनि आ लोकक सचित्र गाइड।',
     'nav.search': 'ताकू',
     'nav.menu': 'मेनू',
     'nav.close': 'बन्द करू',
