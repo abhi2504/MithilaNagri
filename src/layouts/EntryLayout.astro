@@ -3,7 +3,9 @@ import BaseLayout from './BaseLayout.astro';
 import SectionHero from '../components/content/SectionHero.astro';
 import CreditedImage from '../components/media/CreditedImage.astro';
 import Gallery from '../components/media/Gallery.astro';
+import RelatedEntries from '../components/content/RelatedEntries.astro';
 import { getSection } from '../lib/constants';
+import { getRelatedEntries } from '../lib/content';
 import { localizedPath, useTranslations } from '../i18n/utils';
 import type { Locale } from '../i18n/locales';
 
@@ -24,6 +26,9 @@ interface Props {
   gallery?: string[];
   facts?: Fact[];
   sources?: Source[];
+  /** Slug + tags drive the "See also" cross-links (optional). */
+  slug?: string;
+  tags?: string[];
 }
 const {
   lang,
@@ -34,10 +39,15 @@ const {
   gallery = [],
   facts = [],
   sources = [],
+  slug,
+  tags = [],
 } = Astro.props;
 const s = getSection(section)!;
 const t = useTranslations(lang);
 const sectionHref = localizedPath(lang, `/${section}/`);
+const related = slug
+  ? await getRelatedEntries(lang, { key: slug, tags, urlSection: section }, 4)
+  : [];
 ---
 <BaseLayout title={title} description={summary} accent={s.accent} section={section}>
   <SectionHero
@@ -107,6 +117,8 @@ const sectionHref = localizedPath(lang, `/${section}/`);
       }
     </aside>
   </div>
+
+  <RelatedEntries lang={lang} items={related} />
 
   <div class="container-wide">
     <nav class="entry-foot" aria-label="Section navigation">

@@ -1,5 +1,6 @@
 import { getCollection, type CollectionKey } from 'astro:content';
 import { DEFAULT_LOCALE, type Locale } from '../i18n/locales';
+import { getSection } from './constants';
 
 const isProd = import.meta.env.PROD;
 
@@ -67,4 +68,74 @@ function byOrderThenTitle(a: any, b: any): number {
   const ta = a.data?.title ?? '';
   const tb = b.data?.title ?? '';
   return String(ta).localeCompare(String(tb));
+}
+
+export interface RelatedCard {
+  key: string;
+  title: string;
+  summary?: string;
+  cover?: string;
+  /** URL section the card links into (e.g. people, places, history). */
+  urlSection: string;
+  icon: string;
+  /** Number of shared tags (ranking weight). */
+  shared: number;
+}
+
+// Collections that have their own URL section. `articles` is handled separately
+// because it routes by its per-entry `section` field (rituals/history/…).
+const RELATED_COLLECTIONS: { collection: CollectionKey; urlSection: string }[] = [
+  { collection: 'personalities', urlSection: 'people' },
+  { collection: 'places', urlSection: 'places' },
+  { collection: 'villages', urlSection: 'villages' },
+  { collection: 'dishes', urlSection: 'cuisine' },
+  { collection: 'artStyles', urlSection: 'art' },
+  { collection: 'festivals', urlSection: 'festivals' },
+];
+
+function iconFor(urlSection: string): string {
+  return getSection(urlSection)?.icon ?? 'fish';
+}
+
+/**
+ * Cross-section "See also" suggestions ranked by number of shared tags.
+ * Excludes the current entry; returns [] when the entry carries no tags.
+ * Loads only entries in the requested language (with English fallback).
+ */
+export async function getRelatedEntries(
+  lang: Locale,
+  current: { key: string; tags?: string[]; urlSection: string },
+  limit = 4
+): Promise<RelatedCard[]> {
+  const want = new Set((current.tags ?? []).map((t) => String(t).toLowerCase()));
+  if (want.size === 0) return [];
+  const countShared = (tags: string[] = []) =>
+    tags.reduce((n, t) => n + (want.has(String(t).toLowerCase()) ? 1 : 0), 0);
+
+  const out: RelatedCard[] = [];
+  const consider = (e: any, urlSection: string) => {
+    const key = e.data.slug;
+    if (urlSection === current.urlSection && key === current.key) return;
+    const shared = countShared(e.data.tags);
+    if (shared > 0)
+      out.push({
+        key,
+        title: e.data.title,
+        summary: e.data.summary,
+        cover: e.data.cover,
+        urlSection,
+        icon: iconFor(urlSection),
+        shared,
+      });
+  };
+
+  for (const { collection, urlSection } of RELATED_COLLECTIONS) {
+    const entries = await getLocalizedEntries(collection, lang);
+    for (const e of entries) consider(e, urlSection);
+  }
+  const articles = await getLocalizedEntries('articles', lang);
+  for (const e of articles) consider(e, e.data.section);
+
+  out.sort((a, b) => b.shared - a.shared || a.title.localeCompare(b.title));
+  return out.slice(0, limit);
 }

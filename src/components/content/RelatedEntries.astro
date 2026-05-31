@@ -1,0 +1,69 @@
+---
+import EntryCard from './EntryCard.astro';
+import { localizedPath } from '../../i18n/utils';
+import type { Locale } from '../../i18n/locales';
+import type { RelatedCard } from '../../lib/content';
+
+interface Props {
+  lang: Locale;
+  items: RelatedCard[];
+}
+const { lang, items } = Astro.props;
+
+const HEADING: Record<Locale, string> = {
+  en: 'See also',
+  hi: 'यह भी देखें',
+  mai: 'ईहो देखू',
+};
+---
+{
+  items.length > 0 && (
+    <section class="related container-wide" aria-label={HEADING[lang]} data-pagefind-ignore>
+      <h2 class="related-title accent-underline">{HEADING[lang]}</h2>
+      <ul class="related-grid" role="list">
+        {items.map((it) => (
+          <li>
+            <EntryCard
+              href={localizedPath(lang, `/${it.urlSection}/${it.key}/`)}
+              title={it.title}
+              summary={it.summary}
+              cover={it.cover}
+              icon={it.icon}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .related {
+    margin: 0.5rem 0 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .related-title {
+    font-size: 1.4rem;
+    margin: 0 0 1.4rem;
+  }
+  .related-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.6rem;
+  }
+  @media (max-width: 900px) {
+    .related-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
