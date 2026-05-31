@@ -20,42 +20,44 @@ const SRC = '/audio/chhath-flute.mp3';
     const btn = document.getElementById('music-btn');
     const audio = document.getElementById('music-audio') as HTMLAudioElement | null;
     if (!wrap || !btn || !audio) return;
-    let playing = false;
     const KEY = 'mithila-music';
+    // `on` is the visitor's intent (off by default). It drives the button and is
+    // persisted; the audio catches up to it whenever the browser allows.
+    let on = false;
 
+    const prefOn = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
+    const save = (v: boolean) => { try { localStorage.setItem(KEY, v ? '1' : '0'); } catch {} };
     const reflect = () => {
-      btn.setAttribute('aria-pressed', String(playing));
-      wrap.classList.toggle('is-playing', playing);
+      btn.setAttribute('aria-pressed', String(on));
+      wrap.classList.toggle('is-playing', on);
     };
-    const start = () => audio.play().then(() => { playing = true; reflect(); }).catch(() => {});
-
-    const prefOff = () => { try { return localStorage.getItem(KEY) === '0'; } catch { return false; } };
+    const play = () => audio.play().catch(() => {});
 
     // Only reveal the control if the audio file actually exists.
     fetch(audio.src, { method: 'HEAD' })
       .then((r) => {
         if (!r.ok) return;
         wrap.hidden = false;
-        // Plays by default (unless the visitor turned it OFF). Browsers block
-        // autoplay with sound, so try now and again on the first interaction.
-        if (!prefOff()) {
-          start();
-          const once = () => { if (!prefOff() && !playing) start(); document.removeEventListener('pointerdown', once); };
+        // Off by default. If the visitor opted in before, restore that ON state
+        // (it persists across navigation + refresh), show it on the button, and
+        // start the audio — retrying on the first interaction, since browsers
+        // block autoplay-with-sound until a user gesture on the page.
+        if (prefOn()) {
+          on = true;
+          reflect();
+          play();
+          const once = () => { if (on && audio.paused) play(); document.removeEventListener('pointerdown', once); };
           document.addEventListener('pointerdown', once, { once: true });
         }
       })
       .catch(() => {});
 
     btn.addEventListener('click', () => {
-      if (playing) {
-        audio.pause();
-        playing = false;
-        reflect();
-        try { localStorage.setItem(KEY, '0'); } catch {}
-      } else {
-        start();
-        try { localStorage.setItem(KEY, '1'); } catch {}
-      }
+      on = !on;
+      reflect();
+      save(on);
+      if (on) play();
+      else audio.pause();
     });
   })();
 </script>
