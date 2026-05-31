@@ -17,9 +17,11 @@ interface Props {
   section?: string;
   /** Suppress the default sitewide tagline suffix. */
   bareTitle?: boolean;
+  /** Optional social-share image (absolute path or URL). */
+  image?: string;
 }
 
-const { title, description, accent, section, bareTitle = false } = Astro.props;
+const { title, description, accent, section, bareTitle = false, image } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const info = LOCALE_INFO[lang];
 const t = useTranslations(lang);
@@ -31,6 +33,7 @@ const desc =
 
 const site = Astro.site ?? new URL('https://mithila.example');
 const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = image ? new URL(image, site).href : undefined;
 const alternates = LOCALES.map((l) => ({
   hreflang: LOCALE_INFO[l].bcp47,
   href: new URL(switchLocalePath(Astro.url.pathname, l), site).href,
@@ -56,7 +59,9 @@ const fontHref =
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

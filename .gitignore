@@ -20,3 +20,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 # pagefind output is generated into dist
+# private source photos for the In-Memory tribute — only the cropped versions
+# in public/img/memory are published; un-cropped originals stay local
+MemoryOf/

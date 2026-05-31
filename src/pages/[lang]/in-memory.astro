@@ -1,0 +1,890 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { LOCALES, type Locale } from '../../i18n/locales';
+import { localizedPath } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Locale;
+const lp = (p: string) => localizedPath(lang, p);
+
+// Shown beneath her name. Leave '' to hide.
+const years = '5 July 1974 – 30 November 2025';
+
+// ── Her life, in four homes. Two of them already live in this encyclopedia. ──
+const journey = [
+  { place: 'Phulparas', note: 'where she was born', href: '/villages/phulparas/' },
+  { place: 'Sindri', note: 'where she grew up', href: null as string | null },
+  { place: 'Gehuma Bairiya', note: 'where she was wed', href: '/villages/gehuma-bairiya/' },
+  { place: 'Delhi', note: 'where she made her home', href: null as string | null },
+];
+
+// ── Everything she carried by heart — each one a real page she could have
+//    written from memory. Linking her knowledge into the living encyclopedia. ──
+const heart = [
+  {
+    group: 'The festivals she kept',
+    accent: '#d86b7e',
+    items: [
+      { l: 'Chhath', h: '/festivals/chhath/' },
+      { l: 'Sama–Chakeva', h: '/festivals/sama-chakeva/' },
+      { l: 'Jhijhiya', h: '/festivals/jhijhiya/' },
+      { l: 'Jitiya', h: '/festivals/jitiya/' },
+      { l: 'Madhushravani', h: '/festivals/madhushravani/' },
+      { l: 'Kojagara', h: '/festivals/kojagara/' },
+      { l: 'Jur Sital', h: '/festivals/jur-sital/' },
+    ],
+  },
+  {
+    group: 'Her kitchen',
+    accent: '#3e7c4f',
+    items: [
+      { l: 'Thekua', h: '/cuisine/thekua/' },
+      { l: 'Anarsa', h: '/cuisine/anarsa/' },
+      { l: 'Kheer', h: '/cuisine/kheer/' },
+      { l: 'Dal-pittha', h: '/cuisine/dal-pittha/' },
+      { l: 'Pidukiya', h: '/cuisine/pidukiya/' },
+      { l: 'Khaja', h: '/cuisine/khaja/' },
+      { l: 'Tilkut', h: '/cuisine/tilkut/' },
+      { l: 'Dahi-chura', h: '/cuisine/dahi-chura/' },
+      { l: 'Makhana', h: '/cuisine/makhana/' },
+    ],
+  },
+  {
+    group: 'The rites & the songs',
+    accent: '#2e4374',
+    items: [
+      { l: 'Maithil Vivah', h: '/rituals/maithil-vivah/' },
+      { l: 'Kohbar Ghar', h: '/rituals/kohbar-ghar/' },
+      { l: 'Sohar & Chhathi', h: '/rituals/sohar-chhathi/' },
+      { l: 'Aripan', h: '/art/aripan/' },
+      { l: 'Folk music', h: '/living-culture/folk-music/' },
+    ],
+  },
+];
+
+// Five facets of her, in a word and a line.
+const facets = [
+  { word: 'Cheerful', line: 'She rearranged the mood of a room simply by walking into it.' },
+  { word: 'Helpful', line: "The whole neighbourhood's first call in a crisis — no one left empty-handed." },
+  { word: 'Strong', line: 'She knew exactly when to take a stand, and was never afraid to.' },
+  { word: 'Devoted', line: "She made her children's success her life's quiet work." },
+  { word: 'Rooted', line: 'She held every tradition of Mithila, and passed them on whole.' },
+];
+
+// A small, hand-stylised aripan halo of dots for the portrait.
+const ringDots = Array.from({ length: 40 }, (_, i) => {
+  const a = (i / 40) * Math.PI * 2;
+  return { x: 100 + 93 * Math.cos(a), y: 100 + 93 * Math.sin(a), r: i % 4 === 0 ? 2.7 : 1.5 };
+});
+
+// An earthen lamp with a living flame. `id` keeps gradient refs unique per use.
+const diya = (id: string) => `
+<svg class="diya" viewBox="0 0 100 100" aria-hidden="true">
+  <defs>
+    <radialGradient id="${id}-glow" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#ffd98a" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#f0a52e" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#f0a52e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="${id}-flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#fff3c4"/>
+      <stop offset="42%" stop-color="#ffc23d"/>
+      <stop offset="100%" stop-color="#ff6a1a"/>
+    </linearGradient>
+    <linearGradient id="${id}-bowl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cf8038"/>
+      <stop offset="100%" stop-color="#7c4417"/>
+    </linearGradient>
+  </defs>
+  <circle class="diya-glow" cx="50" cy="38" r="34" fill="url(#${id}-glow)"/>
+  <g class="diya-flame">
+    <path d="M50 14 C42 31 45 46 50 55 C55 46 58 31 50 14 Z" fill="url(#${id}-flame)"/>
+    <path d="M50 30 C46.5 38 47.5 48 50 53 C52.5 48 53.5 38 50 30 Z" fill="#fff6da"/>
+  </g>
+  <rect x="49.2" y="52" width="1.6" height="8" rx="0.8" fill="#5a3413"/>
+  <path d="M16 60 Q50 70 84 60 Q76 84 50 84 Q24 84 16 60 Z" fill="url(#${id}-bowl)"/>
+  <path d="M16 60 Q50 71 84 60" fill="none" stroke="#ffce7a" stroke-width="1.4" opacity="0.55"/>
+</svg>`;
+
+---
+
+<BaseLayout
+  title="In Loving Memory of Ranju Jha"
+  description="In loving memory of Ranju Jha — a daughter, sister, wife and mother who knew Mithila by heart, and gave all of it away as love."
+  accent="#e0a82e"
+  bareTitle={true}
+  image="/img/memory/ranju-portrait.jpg"
+>
+  <!-- ───────────────────────── SHRINE / HERO ───────────────────────── -->
+  <section class="mem-hero">
+    <div class="mem-hero-glow" aria-hidden="true"></div>
+    <div class="mem-hero-inner">
+      <span class="mem-lamp" set:html={diya('hero')} />
+
+      <div class="mem-portrait" data-reveal>
+        <svg class="aripan" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="84" fill="none" stroke="#e9c46a" stroke-width="0.8" opacity="0.5" />
+          <circle cx="100" cy="100" r="76" fill="none" stroke="#e9c46a" stroke-width="0.5" stroke-dasharray="1 5" opacity="0.7" />
+          {ringDots.map((d) => <circle cx={d.x} cy={d.y} r={d.r} fill="#e9c46a" opacity="0.85" />)}
+        </svg>
+        <img src="/img/memory/ranju-portrait.jpg" alt="Ranju Jha, smiling" width="240" height="240" loading="eager" />
+      </div>
+
+      <p class="mem-kicker">In loving memory</p>
+      <h1 class="mem-name">Ranju&nbsp;Jha</h1>
+      <p class="mem-name-deva" lang="mai">रंजू&nbsp;झा</p>
+      {years && <p class="mem-years">{years}</p>}
+      <p class="mem-essence">
+        She knew Mithila by heart — its songs, its fasts, its festivals, the warmth of its
+        kitchens — and she gave every bit of it away, as love.
+      </p>
+      <span class="mem-scroll" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── INVOCATION ───────────────────────── -->
+  <section class="mem-band">
+    <div class="mem-wrap">
+      <p class="mem-lead" data-reveal>
+        <span class="dropcap">S</span>ome people learn a culture from books. A rare few <em>become</em> the
+        book. Ranju Jha was the second kind. Long before this encyclopedia was written, every page of
+        it already lived inside her — the order of a ritual, the words of the <em>sohar</em> sung over a
+        newborn, the exact morning to keep a fast, the smell of <em>thekua</em> lifting out of hot ghee.
+        She did not study Mithila. She <em>remembered</em> it, the way a river remembers the land it was
+        born in — and she carried it to a home in Delhi, a thousand miles away, without spilling a drop.
+      </p>
+
+      <p class="mem-body" data-reveal>
+        The entry in this very encyclopedia for her husband's village ends with a quiet admission: that
+        much of Mithila's living heritage <em>“still rests in oral memory rather than the written
+        record.”</em> She <strong>was</strong> that memory. So this page — and, in a way, this whole
+        encyclopedia — is simply an attempt to write down a little of what she already knew by heart.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider-lotus" aria-hidden="true" style="--accent:#e0a82e"></div>
+
+  <!-- ───────────────────────── HER FOUR HOMES ───────────────────────── -->
+  <section class="mem-band">
+    <div class="mem-wrap">
+      <h2 class="mem-h" data-reveal>A life lived in four homes</h2>
+      <ol class="mem-journey" data-reveal>
+        {journey.map((stop, i) => (
+          <li class="mem-stop" style={`--i:${i}`}>
+            <span class="mem-stop-dot" aria-hidden="true"></span>
+            {stop.href ? (
+              <a class="mem-stop-place is-link" href={lp(stop.href)}>{stop.place}</a>
+            ) : (
+              <span class="mem-stop-place">{stop.place}</span>
+            )}
+            <span class="mem-stop-note">{stop.note}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="mem-body mem-center" data-reveal>
+        The world gave her Sindri and Delhi to live in. She gave her children Mithila to belong to.
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── KNEW BY HEART ───────────────────────── -->
+  <section class="mem-band mem-band-alt">
+    <div class="mem-wrap">
+      <h2 class="mem-h" data-reveal>Everything she knew by heart</h2>
+      <p class="mem-body" data-reveal>
+        Ask her anything about Mithila and she already had the answer — not as information, but as
+        memory. Every one of these she carried whole. Each is a page in this encyclopedia now; she
+        could have written all of them from the kitchen, without once looking up.
+      </p>
+
+      <div class="mem-heart">
+        {heart.map((grp) => (
+          <div class="mem-heart-grp" style={`--accent:${grp.accent}`} data-reveal>
+            <h3 class="mem-heart-title">{grp.group}</h3>
+            <ul class="mem-chips" role="list">
+              {grp.items.map((it) => (
+                <li>
+                  <a class="mem-chip" href={lp(it.h)}>{it.l}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <p class="mem-fine" data-reveal>
+        Every page she carried is one this written record would have lost without her — and one her
+        family can now keep.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider-lotus" aria-hidden="true" style="--accent:#e0a82e"></div>
+
+  <!-- ───────────────────────── WHO SHE WAS ───────────────────────── -->
+  <section class="mem-band">
+    <div class="mem-wrap">
+      <h2 class="mem-h" data-reveal>The kind of woman she was</h2>
+      <p class="mem-body" data-reveal>
+        To meet her once was to be remembered by her forever. She was an extrovert in the truest
+        sense — energy moved <em>outward</em> from her, toward people, toward whoever needed her most
+        that day. Cheerful, quick to laugh, fair and striking, she filled a doorway with warmth before
+        she had said a single word.
+      </p>
+      <p class="mem-body" data-reveal>
+        And she was strong. Soft with everyone, yet certain of herself — an optimist who never once
+        confused kindness with weakness. She knew when to stand up, when to speak plainly, when a thing
+        was wrong and needed saying. Her confidence was the rare kind: it asked nothing of anyone, it
+        simply <em>was</em>. Her faith was the same — it lived in her hands, in the lamps she lit and
+        the fasts she kept and the songs she knew by heart.
+      </p>
+
+      <blockquote class="mem-quote" data-reveal>
+        People remember her for one thing above all — she could not watch someone struggle and do
+        nothing. Her door, her kitchen, and her courage were always open.
+      </blockquote>
+
+      <ul class="mem-facets" role="list">
+        {facets.map((f) => (
+          <li class="mem-facet" data-reveal>
+            <span class="mem-facet-word">{f.word}</span>
+            <span class="mem-facet-line">{f.line}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── HER BRAVEST SEASON ───────────────────────── -->
+  <section class="mem-band mem-band-alt">
+    <div class="mem-wrap">
+      <h2 class="mem-h" data-reveal>Her bravest season</h2>
+      <p class="mem-body" data-reveal>
+        In her last years she was handed a diagnosis that usually silences a person: cancer, already at
+        its fourth stage. It did not silence her. She met it the way she met everything — head up,
+        smiling, certain it would never have the last word about who she was. People came to her bedside
+        to give comfort and left having received it. Strangers and doctors alike spoke of her spirit.
+      </p>
+      <blockquote class="mem-quote" data-reveal>
+        Stage four could take a great deal from her. It never once took her smile, her faith, or her
+        grace.
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── GALLERY ───────────────────────── -->
+  <section class="mem-band">
+    <div class="mem-wrap">
+      <h2 class="mem-h mem-center" data-reveal>As we remember her</h2>
+      <div class="mem-gallery" data-reveal>
+        <button
+          type="button"
+          class="mem-photo js-lightbox-trigger"
+          data-src="/img/memory/ranju-smile.jpg"
+          data-alt="Ranju Jha — her smile, the one everyone remembers"
+        >
+          <img src="/img/memory/ranju-smile.jpg" alt="Ranju Jha smiling at home" loading="lazy" />
+          <span class="mem-photo-cap">Her smile — the one everyone remembers</span>
+        </button>
+        <button
+          type="button"
+          class="mem-photo js-lightbox-trigger"
+          data-src="/img/memory/ranju-festival.jpg"
+          data-alt="Ranju Jha at a festival, in a marigold-yellow saree"
+        >
+          <img src="/img/memory/ranju-festival.jpg" alt="Ranju Jha at a festival" loading="lazy" />
+          <span class="mem-photo-cap">At the festival, in her element</span>
+        </button>
+        <button
+          type="button"
+          class="mem-photo js-lightbox-trigger"
+          data-src="/img/memory/ranju-home.jpg"
+          data-alt="Ranju Jha at home in a green Mithila saree"
+        >
+          <img src="/img/memory/ranju-home.jpg" alt="Ranju Jha at home" loading="lazy" />
+          <span class="mem-photo-cap">At home — Mithila in every thread</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── BENEDICTION ───────────────────────── -->
+  <section class="mem-close">
+    <div class="mem-hero-glow mem-close-glow" aria-hidden="true"></div>
+    <div class="mem-close-inner">
+      <span class="mem-lamp mem-lamp-sm" set:html={diya('close')} />
+      <p class="mem-close-line" data-reveal>
+        The lamp she lit in every home she walked into is still burning. We only have to keep our hands
+        near the warmth.
+      </p>
+      <p class="mem-bless" lang="mai" data-reveal>अहाँ सदिखन हमरा सभक मोनमे रहब, माँ।</p>
+      <p class="mem-bless-en" data-reveal>You will live in all our hearts, always.</p>
+      <p class="mem-sign" data-reveal>— Ranju Jha, remembered with love by everyone she made into a family.</p>
+      <a class="mem-home-link" href={lp('/')}>Return to Mithila →</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ============================ SHRINE / HERO ============================ */
+  .mem-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 50% 12%, #3a2a14 0%, #241a10 46%, #181109 100%);
+    color: #f4e9d2;
+    text-align: center;
+    padding: clamp(2.5rem, 6vw, 4.5rem) 1.25rem clamp(3rem, 7vw, 5rem);
+    isolation: isolate;
+  }
+  .mem-hero-glow {
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    width: min(80vw, 620px);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(240, 178, 62, 0.28) 0%, rgba(240, 178, 62, 0) 62%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .mem-hero-inner {
+    max-width: 40rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* the lamp */
+  .mem-lamp {
+    display: inline-block;
+    width: clamp(56px, 12vw, 78px);
+    line-height: 0;
+    filter: drop-shadow(0 0 18px rgba(255, 170, 60, 0.45));
+  }
+  .mem-lamp :global(svg.diya) {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .mem-lamp :global(.diya-flame) {
+    transform-box: fill-box;
+    transform-origin: 50% 92%;
+    animation: flicker 2.4s ease-in-out infinite;
+  }
+  .mem-lamp :global(.diya-glow) {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: glowpulse 2.4s ease-in-out infinite;
+  }
+  @keyframes flicker {
+    0%, 100% { transform: scaleY(1) scaleX(1) skewX(0deg); }
+    25% { transform: scaleY(1.06) scaleX(0.97) skewX(1.5deg); }
+    50% { transform: scaleY(0.97) scaleX(1.02) skewX(-1deg); }
+    75% { transform: scaleY(1.04) scaleX(0.98) skewX(0.8deg); }
+  }
+  @keyframes glowpulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+
+  /* portrait + aripan halo */
+  .mem-portrait {
+    position: relative;
+    width: clamp(200px, 52vw, 248px);
+    aspect-ratio: 1;
+    margin: clamp(1.2rem, 3vw, 1.8rem) 0 2.6rem;
+  }
+  .mem-portrait .aripan {
+    position: absolute;
+    inset: -16%;
+    width: 132%;
+    height: 132%;
+    animation: spin 80s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .mem-portrait img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid rgba(233, 196, 106, 0.85);
+    box-shadow: 0 0 0 6px rgba(24, 17, 9, 0.6), 0 18px 50px rgba(0, 0, 0, 0.55);
+  }
+
+  .mem-kicker {
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 0.72rem;
+    color: #e9c46a;
+    margin: 0 0 0.5rem;
+    padding-left: 0.32em;
+  }
+  .mem-name {
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 9vw, 4.2rem);
+    line-height: 1;
+    margin: 0;
+    color: #fbf3e0;
+    letter-spacing: 0.01em;
+  }
+  .mem-name-deva {
+    font-family: var(--font-deva);
+    font-size: clamp(1.3rem, 4.5vw, 1.9rem);
+    color: #e9c46a;
+    margin: 0.5rem 0 0;
+    opacity: 0.92;
+  }
+  .mem-years {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    color: #cdb78c;
+    margin: 0.7rem 0 0;
+  }
+  .mem-essence {
+    font-family: var(--font-body);
+    font-size: clamp(1.02rem, 2.5vw, 1.2rem);
+    line-height: 1.65;
+    color: #ecdcc0;
+    max-width: 30rem;
+    margin: 1.4rem auto 0;
+    font-style: italic;
+  }
+  .mem-scroll {
+    width: 1px;
+    height: 46px;
+    margin-top: 2.2rem;
+    background: linear-gradient(to bottom, rgba(233, 196, 106, 0.8), transparent);
+  }
+
+  /* ============================ BODY BANDS ============================ */
+  .mem-band {
+    background: var(--bg);
+    color: var(--fg);
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+  }
+  .mem-band-alt {
+    background: color-mix(in srgb, var(--color-ochre) 9%, var(--bg));
+  }
+  .mem-wrap {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  .mem-h {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+    margin: 0 0 1.4rem;
+    color: var(--fg);
+    position: relative;
+    padding-bottom: 0.6rem;
+  }
+  .mem-h::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 3rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-ochre);
+  }
+  .mem-h.mem-center {
+    text-align: center;
+  }
+  .mem-h.mem-center::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .mem-lead {
+    font-family: var(--font-body);
+    font-size: clamp(1.14rem, 2.7vw, 1.4rem);
+    line-height: 1.7;
+    margin: 0 0 1.4rem;
+    color: var(--fg);
+  }
+  .dropcap {
+    float: left;
+    font-family: var(--font-display);
+    font-size: 3.4em;
+    line-height: 0.74;
+    padding: 0.06em 0.12em 0 0;
+    color: var(--color-vermilion);
+  }
+  .mem-body {
+    font-family: var(--font-body);
+    font-size: 1.08rem;
+    line-height: 1.78;
+    color: var(--fg);
+    margin: 0 0 1.15rem;
+  }
+  .mem-body em {
+    font-style: italic;
+    color: color-mix(in srgb, var(--fg) 82%, var(--color-vermilion));
+  }
+  .mem-center {
+    text-align: center;
+    font-style: italic;
+    color: var(--muted);
+    max-width: 32rem;
+    margin-inline: auto;
+  }
+  .mem-fine {
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 1.6rem 0 0;
+    text-align: center;
+  }
+
+  /* ── four homes ── */
+  .mem-journey {
+    list-style: none;
+    margin: 0 0 1.6rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    position: relative;
+  }
+  .mem-journey::before {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 2px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--color-ochre) 0 4px,
+      transparent 4px 10px
+    );
+    opacity: 0.65;
+  }
+  .mem-stop {
+    position: relative;
+    text-align: center;
+    padding-top: 1.5rem;
+  }
+  .mem-stop-dot {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-ochre);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ochre) 22%, transparent);
+  }
+  .mem-stop-place {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
+    color: var(--fg);
+    line-height: 1.2;
+  }
+  .mem-stop-place.is-link {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--link) 40%, transparent);
+    text-underline-offset: 3px;
+  }
+  .mem-stop-place.is-link:hover {
+    text-decoration-color: var(--link);
+  }
+  .mem-stop-note {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    line-height: 1.35;
+  }
+
+  /* ── knew by heart ── */
+  .mem-heart {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.8rem;
+  }
+  .mem-heart-grp {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+  }
+  .mem-heart-title {
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 0.7rem;
+  }
+  .mem-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .mem-chip {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+    color: var(--fg);
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .mem-chip:hover {
+    transform: translateY(-2px);
+    background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+    border-color: var(--accent);
+  }
+
+  /* ── who she was ── */
+  .mem-quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3.4vw, 1.7rem);
+    line-height: 1.5;
+    color: var(--fg);
+    text-align: center;
+    margin: 2rem auto;
+    max-width: 34rem;
+    padding: 0 1rem;
+    position: relative;
+  }
+  .mem-quote::before,
+  .mem-quote::after {
+    content: '◆';
+    color: var(--color-ochre);
+    font-size: 0.7rem;
+    display: block;
+    margin: 0.6rem auto;
+  }
+  .mem-facets {
+    list-style: none;
+    margin: 1.8rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.9rem;
+  }
+  .mem-facet {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--color-ochre);
+    border-radius: var(--radius-card);
+    padding: 1rem 1.1rem 1.15rem;
+  }
+  .mem-facet-word {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--color-vermilion);
+    margin-bottom: 0.3rem;
+  }
+  .mem-facet-line {
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  /* ── gallery ── */
+  .mem-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  .mem-photo {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    position: relative;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--line), 0 0 0 5px var(--bg), 0 0 0 6px color-mix(in srgb, var(--color-ochre) 55%, transparent);
+  }
+  .mem-photo img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    transition: transform 0.4s ease, filter 0.4s ease;
+    filter: saturate(0.96);
+  }
+  .mem-photo:hover img {
+    transform: scale(1.04);
+    filter: saturate(1.05);
+  }
+  .mem-photo-cap {
+    position: absolute;
+    inset: auto 0 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    color: #f6eedd;
+    text-align: left;
+    padding: 1.6rem 0.8rem 0.6rem;
+    background: linear-gradient(to top, rgba(15, 11, 7, 0.82), transparent);
+  }
+
+  /* ============================ BENEDICTION ============================ */
+  .mem-close {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 88%, #3a2a14 0%, #241a10 48%, #181109 100%);
+    color: #f4e9d2;
+    text-align: center;
+    padding: clamp(3rem, 7vw, 5rem) 1.25rem clamp(3.5rem, 8vw, 5.5rem);
+    isolation: isolate;
+  }
+  .mem-close-glow {
+    top: auto;
+    bottom: -12%;
+  }
+  .mem-close-inner {
+    max-width: 38rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .mem-lamp-sm {
+    width: clamp(46px, 10vw, 60px);
+    margin-bottom: 1.4rem;
+  }
+  .mem-close-line {
+    font-family: var(--font-body);
+    font-size: clamp(1.08rem, 2.6vw, 1.3rem);
+    line-height: 1.7;
+    color: #ecdcc0;
+    font-style: italic;
+    margin: 0 0 1.8rem;
+    max-width: 30rem;
+  }
+  .mem-bless {
+    font-family: var(--font-deva);
+    font-size: clamp(1.3rem, 4vw, 1.7rem);
+    color: #f5e4bf;
+    margin: 0 0 0.4rem;
+    line-height: 1.5;
+  }
+  .mem-bless-en {
+    font-family: var(--font-ui);
+    font-size: 0.86rem;
+    letter-spacing: 0.04em;
+    color: #cdb78c;
+    margin: 0 0 1.8rem;
+  }
+  .mem-sign {
+    font-family: var(--font-body);
+    font-size: 0.96rem;
+    color: #e2d2b3;
+    max-width: 26rem;
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+  .mem-home-link {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e9c46a;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    transition: border-color 0.15s ease;
+  }
+  .mem-home-link:hover {
+    border-color: #e9c46a;
+  }
+
+  /* ============================ REVEAL ============================ */
+  [data-reveal].reveal-init {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  [data-reveal].reveal-in {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 620px) {
+    .mem-journey {
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem 0.5rem;
+    }
+    .mem-journey::before {
+      display: none;
+    }
+    .mem-gallery {
+      grid-template-columns: 1fr;
+      max-width: 22rem;
+      margin-inline: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mem-lamp :global(.diya-flame),
+    .mem-lamp :global(.diya-glow),
+    .mem-portrait .aripan {
+      animation: none;
+    }
+    [data-reveal].reveal-init {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  // Gentle fade-up as each block enters view. Progressive enhancement: with no
+  // JS (or reduced-motion) everything is simply visible from the start.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = Array.from(document.querySelectorAll('[data-reveal]'));
+  if (!reduce && 'IntersectionObserver' in window && els.length) {
+    const reveal = (el: Element) => {
+      el.classList.remove('reveal-init');
+      el.classList.add('reveal-in');
+    };
+    els.forEach((el) => el.classList.add('reveal-init'));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            reveal(e.target);
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+    );
+    els.forEach((el) => io.observe(el));
+    // Safety net — content must never stay invisible. If anything is still hidden
+    // after a few seconds (no-scroll, unusual viewport, print, IO edge cases),
+    // reveal it anyway.
+    setTimeout(() => els.forEach((el) => el.classList.contains('reveal-init') && reveal(el)), 3500);
+  }
+</script>
